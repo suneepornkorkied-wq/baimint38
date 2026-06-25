@@ -1,0 +1,9 @@
+[[redirects]]
+  from = "/post"
+  to = "/.netlify/functions/post"
+  status = 200
+
+[[redirects]]
+  from = "/post/*"
+  to = "/.netlify/functions/post"
+  status = 200
