@@ -160,7 +160,7 @@ exports.handler = async (event) => {
     const lines = caption.split('\n');
     const title = (lines[0] || shopName) + (priceText(post) ? ' — ' + priceText(post) : '');
     const description = lines.slice(1).join('\n').trim() || caption || 'อะไหล่มือถือทุกรุ่น ราคาถูก งานคุณภาพ';
-    const image = (post.images && post.images[0]) || '';
+    const image = post.ogImage || (post.images && post.images[0]) || '';
     const postUrl = `${SITE_URL}/post?id=${postId}`;
 
     const html = buildHTML({
