@@ -403,17 +403,36 @@ async function uploadPendingImages(){
           p.images[i]=await uploadDataUrl(p.images[i]);
         }
       }
-      // สร้าง collage สำหรับ preview ถ้ามีหลายรูป (เก็บที่ ogImage)
-      const httpImgs=p.images.filter(s=>typeof s==='string'&&s.startsWith('http'));
-      if(httpImgs.length>1){
+    }
+  }
+}
+// สร้าง collage แบบเบื้องหลัง (ไม่บล็อกการบันทึก) แล้วค่อยอัปเดต Firestore
+async function buildCollagesInBackground(){
+  let changed=false;
+  for(const p of db.posts){
+    const httpImgs=(p.images||[]).filter(s=>typeof s==='string'&&s.startsWith('http'));
+    if(httpImgs.length>1){
+      // ถ้ายังไม่มี collage หรือรูปเปลี่ยน → สร้างใหม่
+      if(!p.ogImage || p._ogKey!==httpImgs.join('|')){
         try{
           const collage=await makeCollage(httpImgs);
-          if(collage){ p.ogImage=await uploadDataUrl(collage); }
+          if(collage){
+            p.ogImage=await uploadDataUrl(collage);
+            p._ogKey=httpImgs.join('|');
+            changed=true;
+          }
         }catch(e){ console.warn('collage failed:',e); }
-      }else{
-        p.ogImage=httpImgs[0]||'';
       }
+    }else if(httpImgs.length===1 && p.ogImage!==httpImgs[0]){
+      p.ogImage=httpImgs[0]; p._ogKey=httpImgs[0]; changed=true;
     }
+  }
+  if(changed && fbReady){
+    try{
+      saveLocal();
+      const cloud=stripBase64(JSON.parse(JSON.stringify(db)));
+      await CLOUD_DOC().set(cloud);
+    }catch(e){ console.warn('bg collage save failed:',e); }
   }
 }
 let saving=false;
@@ -440,6 +459,8 @@ async function save(){
     const cloud=stripBase64(JSON.parse(JSON.stringify(db)));
     await CLOUD_DOC().set(cloud);
     setCloudStatus('ok');
+    // สร้าง collage เบื้องหลัง (ไม่ทำให้ค้าง) สำหรับ preview Facebook
+    setTimeout(()=>{ buildCollagesInBackground(); }, 500);
   }catch(e){
     console.warn('cloud save failed:', e);
     setCloudStatus('error');
