@@ -1,3 +1,19 @@
+# ลิงก์แยกหน้าสำหรับนำไปใช้ใน Google Sites
+[[redirects]]
+  from = "/price"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/products"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/news"
+  to = "/index.html"
+  status = 200
+
 [[redirects]]
   from = "/post"
   to = "/.netlify/functions/post"

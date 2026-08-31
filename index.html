@@ -522,15 +522,36 @@ let db=loadLocal();
 let activeCat='ทั้งหมด', query='', isAdmin=false, view='feed';
 
 /* ---------- views ---------- */
-function switchView(v){
+const VIEW_TO_PATH={price:'/price',feed:'/products',news:'/news'};
+const PATH_TO_VIEW={'/':'price','/price':'price','/products':'feed','/news':'news'};
+const PAGE_TO_VIEW={price:'price',prices:'price',products:'feed',product:'feed',posts:'feed',feed:'feed',news:'news'};
+
+function viewFromUrl(){
+  const page=(new URLSearchParams(location.search).get('page')||'').toLowerCase();
+  if(PAGE_TO_VIEW[page]) return PAGE_TO_VIEW[page];
+  const path=location.pathname.replace(/\/+$/,'')||'/';
+  return PATH_TO_VIEW[path]||'price';
+}
+
+function switchView(v,updateUrl=true){
+  if(!['feed','price','news'].includes(v)) v='price';
   view=v;
   document.getElementById('feedView').style.display = v==='feed'?'':'none';
   document.getElementById('priceView').style.display = v==='price'?'':'none';
   document.getElementById('newsView').style.display = v==='news'?'':'none';
   if(v==='news') renderNews();
   if(v==='feed') renderFeed();
+
+  if(updateUrl){
+    const target=VIEW_TO_PATH[v]||'/price';
+    if(location.pathname!==target || location.search){
+      history.pushState({view:v},'',target);
+    }
+  }
   window.scrollTo(0,0);
 }
+
+window.addEventListener('popstate',()=>switchView(viewFromUrl(),false));
 function timeAgo(ts){
   const d=Math.floor((Date.now()-ts)/1000);
   if(d<3600) return Math.max(1,Math.floor(d/60))+' นาทีที่แล้ว';
@@ -1160,7 +1181,7 @@ function flash(msg){
 
 /* ---------- init ---------- */
 renderAll();
-switchView('price');
+switchView(viewFromUrl(),false);
 initCloud();
 </script>
 </body>
