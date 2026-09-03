@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BUILD v21-edit-multiupload: direct product edit + multi-image ordered picker -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
@@ -8,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600&family=Mali:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -336,8 +338,6 @@
   .store-count{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;background:#e6f0ff;color:#125bb4;font-size:.72rem;font-weight:700}
   .store-toolbar-actions{display:flex;align-items:center;gap:8px}
   .store-sort{width:auto;min-width:112px;border:1px solid #d9e1ea;border-radius:10px;padding:8px 10px;font-size:.8rem;background:#fff;color:#344054}
-  .store-cart-btn{position:relative;border:1px solid #cfe0f6;background:#fff;color:#0b58b0;border-radius:10px;padding:8px 12px;font-family:'Bai Jamjuree';font-weight:700;cursor:pointer;white-space:nowrap}
-  .cart-badge{position:absolute;right:-6px;top:-7px;min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:#e83b2f;color:#fff;font-size:.65rem;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
 
   .store-search{position:relative;margin:0 0 10px}
   .store-search input{padding:12px 14px 12px 42px;border:1px solid #d9e1ea;border-radius:12px;background:#fff;font-size:.9rem;box-shadow:none}
@@ -352,7 +352,7 @@
   .store-imgwrap img{object-fit:contain;background:#fff;padding:4px}
   .store-placeholder{background:#f7f9fc;font-size:2.4rem}
   .store-badge{left:auto;right:12px;top:12px;border-radius:8px;padding:5px 10px 6px;font-size:.64rem;line-height:1.05;font-weight:700;box-shadow:0 4px 10px rgba(11,102,200,.22);z-index:3}
-  .store-badge.ready{background:#0b66c8;color:#fff}.store-badge.sold{background:#44505e;color:#fff}
+  .store-badge.ready{background:#e8f6ed;color:#237a4b;box-shadow:0 4px 10px rgba(35,122,75,.12);border:1px solid #c8e8d4}.store-badge.sold{background:#fff0f0;color:#d83b3b;box-shadow:none;border:1px solid #ffd0d0}
   .store-star{left:12px;right:auto;top:12px;background:#0b66c8;color:#fff;border-radius:8px;padding:5px 10px 6px;font-size:.62rem;line-height:1.05;box-shadow:0 4px 10px rgba(11,102,200,.18);z-index:3}
   .store-cardbody{padding:9px 10px 10px;text-align:center;gap:3px}
   .store-itemtype{display:inline-flex;align-items:center;justify-content:center;align-self:center;margin:2px auto 0;padding:3px 8px;border-radius:999px;background:#eef5ff;color:#0a63bd;font-family:'Bai Jamjuree',sans-serif;font-size:.62rem;font-weight:700;line-height:1}
@@ -408,7 +408,7 @@
   .detail-info{padding:26px 28px;display:flex;flex-direction:column;align-items:stretch}
   .detail-headbadges{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:10px}
   .detail-status{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;font-family:'Bai Jamjuree';font-size:.67rem;font-weight:700;margin:0}
-  .detail-status.ready{background:#e8f7f1;color:#08745f}.detail-status.sold{background:#eef0f3;color:#44505e}.detail-featured{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:999px;background:#fff7df;color:#8a5b00;font-size:.65rem;font-weight:700}
+  .detail-status.ready{background:#e8f6ed;color:#237a4b}.detail-status.sold{background:#fff0f0;color:#d83b3b}.detail-featured{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:999px;background:#fff7df;color:#8a5b00;font-size:.65rem;font-weight:700}
   .detail-name{font-family:'Bai Jamjuree';font-size:1.7rem;color:#101828;font-weight:700;line-height:1.22;margin:0}
   .detail-spec{font-size:.93rem;color:#526173;margin-top:6px}
   .detail-price-note{font-family:'Bai Jamjuree',sans-serif;font-size:.74rem;line-height:1.35;color:#667085;margin-top:12px;margin-bottom:4px;font-weight:500}
@@ -422,14 +422,9 @@
   .detail-row{display:grid;grid-template-columns:118px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid #eef2f6;font-size:.8rem;line-height:1.45}.detail-row:last-child{border-bottom:0}
   .detail-row .k{font-family:'Bai Jamjuree';color:#667085;font-weight:600}.detail-row>div:last-child{color:#101828;font-weight:500}
   .detail-note{background:#f6f9fc;border:1px solid #e3eaf2;border-radius:11px;margin-top:10px;padding:11px 12px;font-size:.78rem;line-height:1.55;white-space:pre-wrap;color:#344054}
-  .detail-qtyline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
-  .detail-qtylabel{font-family:'Bai Jamjuree';font-size:.78rem;font-weight:700;color:#344054}
-  .detail-qty{display:flex;align-items:center;gap:0;margin:0}
-  .detail-qty button,.detail-qty span{width:40px;height:36px;border:1px solid #d8e0ea;background:#fff;display:flex;align-items:center;justify-content:center;font-family:'Bai Jamjuree';font-weight:700}.detail-qty button{cursor:pointer}
-  .detail-qty button:first-child{border-radius:8px 0 0 8px}.detail-qty button:last-child{border-radius:0 8px 8px 0}.detail-qty span{border-left:0;border-right:0}
   .detail-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
   .detail-actions a,.detail-actions button{text-decoration:none;border-radius:9px;padding:12px 10px;font-family:'Bai Jamjuree';font-weight:700;text-align:center;cursor:pointer;font-size:.83rem}
-  .detail-actions .cart{background:#0969ce;color:#fff;border:1px solid #0969ce;grid-column:1/-1}.detail-actions .buy{background:#fff;color:#075dbd;border:1px solid #0b69ca}.detail-actions .share{background:#f0f4f8;color:#344054;border:1px solid #e0e6ee}
+  .detail-actions .buy{background:#fff;color:#075dbd;border:1px solid #0b69ca}.detail-actions .share{background:#f0f4f8;color:#344054;border:1px solid #e0e6ee}
   .detail-actions .disabled{background:#e5e8ed!important;color:#8a94a2!important;border-color:#e5e8ed!important;pointer-events:none}
   .detail-postbox{margin-top:12px;border:1px dashed #a9c8ee;background:linear-gradient(135deg,#f6faff,#eef6ff);border-radius:12px;padding:12px}
   .detail-postbox-title{display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:'Bai Jamjuree';font-weight:700;color:#143b6d;font-size:.82rem;margin-bottom:4px}.detail-postbox small{display:block;color:#6b7c91;font-size:.66rem;line-height:1.4}
@@ -447,12 +442,6 @@
   .postshare-preview{padding:12px;background:#eef3f8;overflow:auto;display:flex;justify-content:center}.postshare-preview img{display:block;width:min(100%,390px);height:auto;border-radius:10px;box-shadow:0 8px 24px rgba(15,40,75,.14)}
   .postshare-actions{padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px}.postshare-actions button{border:1px solid #d6e0eb;background:#fff;border-radius:9px;padding:10px;font-family:'Bai Jamjuree';font-size:.76rem;font-weight:700;color:#24415f;cursor:pointer}.postshare-actions button.primary{grid-column:1/-1;background:#0a65c8;color:#fff;border-color:#0a65c8}
   .postshare-note{grid-column:1/-1;font-size:.64rem;color:#7a8798;line-height:1.4;text-align:center}
-
-  /* Cart drawer */
-  .cart-overlay{position:fixed;inset:0;background:rgba(8,24,50,.48);z-index:95;display:none;align-items:stretch;justify-content:flex-end}.cart-overlay.show{display:flex}
-  .cart-drawer{width:min(410px,92vw);height:100%;background:#fff;padding:0;display:flex;flex-direction:column;box-shadow:-18px 0 45px rgba(0,0,0,.18)}
-  .cart-head{background:#071f48;color:#fff;padding:17px 18px;display:flex;align-items:center;justify-content:space-between;font-family:'Bai Jamjuree';font-weight:700}.cart-head button{border:0;background:rgba(255,255,255,.12);color:#fff;width:34px;height:34px;border-radius:8px;cursor:pointer}
-  .cart-items{padding:14px;overflow:auto;flex:1}.cart-row{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;border-bottom:1px solid #edf0f4;padding:10px 0}.cart-row img,.cart-row-ph{width:64px;height:64px;border-radius:8px;object-fit:contain;background:#f6f8fb;border:1px solid #e5e9ef}.cart-row-name{font-weight:700;font-size:.82rem}.cart-row-meta{font-size:.7rem;color:#667085;margin-top:2px}.cart-row-price{font-weight:700;color:#0a59ac;font-size:.82rem;margin-top:4px}.cart-row button{border:0;background:#f0f3f7;border-radius:7px;padding:5px 8px;cursor:pointer}.cart-foot{border-top:1px solid #e5e9ef;padding:14px 16px 18px}.cart-total{display:flex;justify-content:space-between;font-family:'Bai Jamjuree';font-weight:700;margin-bottom:10px}.cart-order{display:block;text-decoration:none;text-align:center;background:#0a66c9;color:#fff;padding:12px;border-radius:8px;font-family:'Bai Jamjuree';font-weight:700}.cart-empty{text-align:center;color:#667085;padding:50px 15px;font-size:.88rem}
 
   /* Admin — desktop/fullscreen clean panel */
   .overlay.adminmode{align-items:stretch;background:#f4f6fa;overflow:auto}
@@ -477,13 +466,13 @@
   }
   @media(max-width:590px){
     .store-shell{padding:12px 10px 26px}.store-showcase{height:154px;padding:17px 18px;margin-bottom:16px}.store-showcase.has-store-cover{width:100%;max-width:820px;height:auto;aspect-ratio:820/312;padding:0;border-radius:13px;margin-left:auto;margin-right:auto}.store-showcase-copy{width:63%}.store-showcase-kicker{font-size:.62rem}.store-showcase h1{font-size:1.25rem}.store-showcase p{font-size:.72rem;margin-top:5px}.store-showcase-phones{width:42%;height:150px;right:0}.promo-phone{width:65px;height:112px;border-width:4px;border-radius:11px}.promo-phone:nth-child(2){right:43%}.promo-phone:nth-child(3){right:2%}.promo-phone:nth-child(4){display:none}
-    .store-toolbar{align-items:flex-end}.store-toolbar h2{font-size:1.08rem}.store-sort{display:none}.store-count{font-size:.62rem}.store-cart-btn{padding:7px 9px;font-size:.72rem}
+    .store-toolbar{align-items:flex-end}.store-toolbar h2{font-size:1.08rem}.store-sort{display:none}.store-count{font-size:.62rem}
     .store-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.store-imgwrap{margin:7px 7px 0}.store-name{font-size:.8rem}.store-spec{font-size:.64rem}.store-price{font-size:.93rem}.store-detailbtn{font-size:.7rem;padding:7px 5px}
     .store-services{grid-template-columns:1fr}.store-service{border-right:0;border-bottom:1px solid #d6e2ef;justify-content:flex-start;padding-left:20px}.store-service:last-child{border-bottom:0}
     .store-footer-cover{margin-top:18px;border-radius:11px}
     .store-footer-cover img{aspect-ratio:820/312;object-fit:cover}
     .detail-shell{padding:8px 10px 24px}.detail-layout{grid-template-columns:1fr}.gallery{border-right:0;border-bottom:1px solid #e3e8ef;padding:12px}.detail-info{padding:17px}.gallery-thumbs button{flex-basis:56px;width:56px;height:56px}.detail-name{font-size:1.3rem}.detail-price{font-size:1.35rem}.detail-row{grid-template-columns:112px 1fr;font-size:.78rem}.related{padding:11px}.related .store-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-    .detail-shell{padding:8px 10px 92px}.detail-topline{position:sticky;top:0;z-index:20;background:#f5f7fb;padding:3px 0 5px}.detail-topactions .detail-iconbtn{padding:0 9px;height:35px}.detail-topactions .detail-iconbtn span{display:none}.detail-card{border-radius:14px}.detail-layout{grid-template-columns:1fr}.gallery{border-right:0;border-bottom:1px solid #e3e8ef;padding:12px}.gallery-main{border-radius:13px}.gallery-main img{padding:10px}.gallery-thumbs button{flex-basis:58px;width:58px;height:58px}.gallery-tip{display:none}.detail-info{padding:16px}.detail-name{font-size:1.38rem}.detail-price{font-size:1.55rem;margin-top:11px}.detail-facts{gap:7px}.detail-fact{padding:9px;min-height:58px}.detail-row{grid-template-columns:105px 1fr;font-size:.76rem}.detail-actions{grid-template-columns:1fr 1fr}.detail-actions .cart{display:none}.detail-postbox{margin-top:10px}.detail-posttools{grid-template-columns:1fr 1fr}.related{padding:11px;border-radius:13px}.related .store-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.detail-mobilebar{display:grid;grid-template-columns:auto 1fr 1fr;gap:7px;align-items:center;position:fixed;left:0;right:0;bottom:0;z-index:85;background:rgba(255,255,255,.96);border-top:1px solid #dfe6ee;padding:8px 10px max(8px,env(safe-area-inset-bottom));box-shadow:0 -10px 30px rgba(15,40,75,.1);backdrop-filter:blur(9px)}.detail-mobileprice{padding-right:4px}.detail-mobileprice small{display:block;color:#7a8798;font-size:.56rem}.detail-mobileprice b{font-family:'Bai Jamjuree';font-size:.9rem;color:#075dbd;white-space:nowrap}.detail-mobilebar button,.detail-mobilebar a{border-radius:9px;padding:11px 7px;border:1px solid #0a65c8;font-family:'Bai Jamjuree';font-weight:700;text-align:center;text-decoration:none;font-size:.72rem}.detail-mobilebar .mcart{background:#0a65c8;color:#fff}.detail-mobilebar .mbuy{background:#fff;color:#075dbd}.detail-mobilebar .disabled{background:#e5e8ed!important;color:#8a94a2!important;border-color:#e5e8ed!important;pointer-events:none}
+    .detail-shell{padding:8px 10px 92px}.detail-topline{position:sticky;top:0;z-index:20;background:#f5f7fb;padding:3px 0 5px}.detail-topactions .detail-iconbtn{padding:0 9px;height:35px}.detail-topactions .detail-iconbtn span{display:none}.detail-card{border-radius:14px}.detail-layout{grid-template-columns:1fr}.gallery{border-right:0;border-bottom:1px solid #e3e8ef;padding:12px}.gallery-main{border-radius:13px}.gallery-main img{padding:10px}.gallery-thumbs button{flex-basis:58px;width:58px;height:58px}.gallery-tip{display:none}.detail-info{padding:16px}.detail-name{font-size:1.38rem}.detail-price{font-size:1.55rem;margin-top:11px}.detail-facts{gap:7px}.detail-fact{padding:9px;min-height:58px}.detail-row{grid-template-columns:105px 1fr;font-size:.76rem}.detail-actions{grid-template-columns:1fr 1fr}.detail-postbox{margin-top:10px}.detail-posttools{grid-template-columns:1fr 1fr}.related{padding:11px;border-radius:13px}.related .store-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.detail-mobilebar{display:grid;grid-template-columns:auto 1fr;gap:7px;align-items:center;position:fixed;left:0;right:0;bottom:0;z-index:85;background:rgba(255,255,255,.96);border-top:1px solid #dfe6ee;padding:8px 10px max(8px,env(safe-area-inset-bottom));box-shadow:0 -10px 30px rgba(15,40,75,.1);backdrop-filter:blur(9px)}.detail-mobileprice{padding-right:4px}.detail-mobileprice small{display:block;color:#7a8798;font-size:.56rem}.detail-mobileprice b{font-family:'Bai Jamjuree';font-size:.9rem;color:#075dbd;white-space:nowrap}.detail-mobilebar button,.detail-mobilebar a{border-radius:9px;padding:11px 7px;border:1px solid #0a65c8;font-family:'Bai Jamjuree';font-weight:700;text-align:center;text-decoration:none;font-size:.72rem}.detail-mobilebar .mbuy{background:#fff;color:#075dbd}.detail-mobilebar .disabled{background:#e5e8ed!important;color:#8a94a2!important;border-color:#e5e8ed!important;pointer-events:none}
     .overlay.adminmode .sheet{padding:0 12px 28px}.admin-topbar{margin:0 -12px 14px;padding:13px 14px}.store-form-grid{grid-template-columns:1fr}.store-form-grid .full{grid-column:auto}.store-save-row{display:grid;grid-template-columns:1fr 1.5fr}.store-save-row .btn{min-width:0;width:100%}
   }
 
@@ -509,7 +498,6 @@
     .product-mobile-tools{display:flex;position:relative;z-index:4;align-items:center;gap:5px;margin-left:8px}
     .product-mobile-tools button{position:relative;width:36px;height:36px;border:0;background:transparent;color:#fff;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer}
     .product-mobile-tools svg{width:23px;height:23px}
-    .product-mobile-tools .cart-badge-sync{position:absolute;right:-1px;top:-2px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#1674df;color:#fff;border:2px solid #08285d;font-size:.54rem;display:flex;align-items:center;justify-content:center;font-weight:700}
 
     .detail-shell{padding:8px 9px 22px;max-width:100%}
     .detail-topline{position:static;background:transparent;padding:1px 0 6px;margin-bottom:2px}
@@ -525,8 +513,8 @@
     .mobile-hero .gallery-coverlabel{display:none}
     .mobile-summary{min-width:0;padding:3px 1px 0}
     .mobile-summary .detail-headbadges{margin-bottom:6px;gap:4px}
-    .mobile-summary .detail-status{font-size:.56rem;padding:4px 7px;background:#e8f1ff;color:#0b5db7}
-    .mobile-summary .detail-status.sold{background:#edf0f3;color:#46515f}
+    .mobile-summary .detail-status{font-size:.56rem;padding:4px 7px;background:#e8f6ed;color:#237a4b}
+    .mobile-summary .detail-status.sold{background:#fff0f0;color:#d83b3b}
     .mobile-summary .detail-featured{font-size:.52rem;padding:4px 6px}
     .mobile-summary .detail-name{font-size:1.24rem;line-height:1.08;margin:0;font-weight:700;color:#050b14;letter-spacing:-.2px}
     .mobile-summary .detail-spec{font-size:.72rem;color:#1f2b3a;margin-top:5px;line-height:1.3}
@@ -541,10 +529,9 @@
     .mobile-thumbs button{flex:0 0 54px;width:54px;height:54px;border:1px solid #dbe3ed;border-radius:8px;background:#fff;padding:3px;cursor:pointer}
     .mobile-thumbs button.on{border:2px solid #0869df;box-shadow:0 0 0 2px rgba(8,105,223,.08)}
     .mobile-thumbs img{width:100%;height:100%;object-fit:contain;background:#fff;border-radius:5px}
-    .mobile-qty{display:flex;align-items:center;margin-top:8px}.mobile-qty button,.mobile-qty span{width:38px;height:34px;border:1px solid #d9e1eb;background:#fff;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700}.mobile-qty button:first-child{border-radius:7px 0 0 7px}.mobile-qty button:last-child{border-radius:0 7px 7px 0}.mobile-qty span{border-left:0;border-right:0}
     .mobile-main-actions{display:grid;grid-template-columns:1fr;gap:7px;margin-top:9px}
     .mobile-main-actions a,.mobile-main-actions button{width:100%;min-height:44px;border-radius:7px;padding:10px 9px;font-size:.84rem;font-weight:700;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer}
-    .mobile-main-actions .cart{border:1px solid #075fc8;background:linear-gradient(90deg,#0b69d8,#0757bb);color:#fff}
+    
     .mobile-main-actions .buy{border:1.3px solid #075fc8;background:#fff;color:#064f9f}
     .mobile-main-actions .disabled{background:#e5e8ed!important;color:#8a94a2!important;border-color:#e5e8ed!important;pointer-events:none}
 
@@ -591,7 +578,6 @@
     .product-mobile-tools{gap:7px!important;margin-left:auto!important}
     .product-mobile-tools button{width:34px!important;height:34px!important;padding:4px!important}
     .product-mobile-tools svg{width:25px!important;height:25px!important;stroke-width:1.7!important}
-    .product-mobile-tools .cart-badge-sync{right:-2px!important;top:-3px!important;min-width:17px!important;height:17px!important;background:#2475e8!important;border:2px solid #06234f!important;font-size:.51rem!important}
 
     .detail-shell{max-width:none!important;padding:0 11px 14px!important;background:#fff!important}
     .detail-topline{position:relative!important;top:auto!important;z-index:1!important;background:#fff!important;padding:11px 1px 8px!important;margin:0!important;min-height:48px!important;display:flex!important;align-items:center!important}
@@ -614,8 +600,8 @@
     .mobile-summary .detail-name{font-size:1.28rem!important;line-height:1.03!important;font-weight:700!important;letter-spacing:-.5px!important;color:#05090f!important;margin:0!important;white-space:normal!important}
     .mobile-summary .detail-spec{font-size:.70rem!important;line-height:1.25!important;color:#101827!important;margin-top:6px!important;font-weight:500!important}
     .mobile-summary .detail-headbadges{display:flex!important;align-items:center!important;gap:5px!important;margin:8px 0 0!important}
-    .mobile-summary .detail-status{font-size:.58rem!important;line-height:1!important;padding:5px 8px!important;border-radius:6px!important;font-weight:600!important;background:#e9f2ff!important;color:#075ec5!important;margin:0!important}
-    .mobile-summary .detail-status.sold{background:#edf0f3!important;color:#485563!important}
+    .mobile-summary .detail-status{font-size:.58rem!important;line-height:1!important;padding:5px 8px!important;border-radius:6px!important;font-weight:600!important;background:#e8f6ed!important;color:#237a4b!important;margin:0!important}
+    .mobile-summary .detail-status.sold{background:#fff0f0!important;color:#d83b3b!important}
     .mobile-summary .detail-featured{font-size:.53rem!important;padding:5px 7px!important;border-radius:6px!important;background:#fff3cf!important;color:#9b6a00!important;font-weight:600!important}
     .mobile-summary .detail-price-note{font-size:.54rem!important;line-height:1.2!important;margin:9px 0 3px!important;color:#667085!important;font-weight:500!important}
     .mobile-summary .detail-price{font-size:1.31rem!important;line-height:1!important;color:#075ec5!important;margin:0 0 13px!important;font-weight:700!important;letter-spacing:-.4px!important}
@@ -629,14 +615,11 @@
     .mobile-thumbs button{width:auto!important;height:auto!important;aspect-ratio:1/1!important;flex:auto!important;border:1px solid #dbe3ed!important;border-radius:7px!important;background:#fff!important;padding:3px!important;min-width:0!important;box-shadow:none!important}
     .mobile-thumbs button.on{border:1.8px solid #0869df!important;box-shadow:none!important}
     .mobile-thumbs img{width:100%!important;height:100%!important;object-fit:contain!important;border-radius:4px!important;background:#fff!important}
-    .mobile-qty{display:grid!important;grid-template-columns:repeat(3,34px)!important;width:max-content!important;margin-top:8px!important}
-    .mobile-qty button,.mobile-qty span{width:34px!important;height:31px!important;border:1px solid #d8e1eb!important;background:#fff!important;font-size:.72rem!important;font-weight:600!important;color:#0f2340!important}
-    .mobile-qty button:first-child{border-radius:7px 0 0 7px!important}.mobile-qty button:last-child{border-radius:0 7px 7px 0!important}.mobile-qty span{border-left:0!important;border-right:0!important}
 
     .mobile-main-actions{display:grid!important;grid-template-columns:1fr!important;gap:7px!important;margin-top:8px!important}
     .mobile-main-actions a,.mobile-main-actions button{min-height:42px!important;border-radius:7px!important;padding:8px 10px!important;font-size:.83rem!important;line-height:1!important;font-weight:700!important;gap:8px!important}
     .mobile-main-actions .btn-line-icon{width:19px;height:19px;flex:0 0 19px}
-    .mobile-main-actions .cart{background:linear-gradient(90deg,#0a69d7 0%,#0754b6 100%)!important;border:1px solid #075cc3!important;color:#fff!important}
+    
     .mobile-main-actions .buy{background:#fff!important;border:1.3px solid #075fc8!important;color:#0753a8!important}
 
     .mobile-share-panel{margin-top:9px!important;background:#fff!important;border:1px solid #dce4ed!important;border-radius:12px!important;padding:9px 10px 10px!important;box-shadow:none!important}
@@ -686,7 +669,6 @@
   </div>
   <div class="product-mobile-tools">
     <button aria-label="ค้นหาสินค้า" onclick="openStoreSearch()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg></button>
-    <button aria-label="ตะกร้า" onclick="openCart()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2 11h10l2-8H6"/><circle cx="9" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></svg><span class="cart-badge-sync">0</span></button>
   </div>
   <div id="headerTools" style="display:flex;gap:8px;align-items:center;position:relative;z-index:2">
     <span id="cloudDot" title="" style="width:9px;height:9px;border-radius:50%;background:#9ca3af;flex-shrink:0;box-shadow:0 0 0 2px rgba(255,255,255,.3)"></span>
@@ -721,7 +703,6 @@
           <option value="priceLow">ราคาน้อย → มาก</option>
           <option value="priceHigh">ราคามาก → น้อย</option>
         </select>
-        <button class="store-cart-btn" onclick="openCart()">🛒 ตะกร้า <span class="cart-badge" id="cartBadge">0</span></button>
       </div>
     </div>
     <div class="store-search">
@@ -791,18 +772,6 @@
   <div class="sheet" id="sheet"></div>
 </div>
 
-<!-- STORE CART -->
-<div class="cart-overlay" id="cartOverlay" onclick="if(event.target.id==='cartOverlay')closeCart()">
-  <div class="cart-drawer">
-    <div class="cart-head"><span>🛒 ตะกร้าสินค้า</span><button onclick="closeCart()">✕</button></div>
-    <div class="cart-items" id="cartItems"></div>
-    <div class="cart-foot">
-      <div class="cart-total"><span>ยอดรวม</span><span id="cartTotal">฿0</span></div>
-      <a class="cart-order" id="cartOrderBtn" href="#" target="_blank">สั่งซื้อ / ทักแอดมิน</a>
-    </div>
-  </div>
-</div>
-
 <!-- PRODUCT POST IMAGE PREVIEW -->
 <div class="postshare-overlay" id="postShareOverlay" onclick="if(event.target.id==='postShareOverlay')closePostShare()">
   <div class="postshare-card">
@@ -822,7 +791,7 @@
 const DB_KEY='partsPriceDB_v1';
 const PUBLIC_SHOP_BASE='https://app.baimint38.com';
 const defaultDB={
-  shop:{name:'ใบมิ้นท์ งานช่าง', tag:'อะไหล่ มือถือ', line:'0842916649', messenger:'baimint', phone:'0962264469', phone2:'0842916649', logo:'', cover:'', storeCover:'', detailFooterCover:'', postAvatar:'', pass:'1234'},
+  shop:{name:'ใบมิ้นท์ งานช่าง', tag:'อะไหล่ มือถือ', line:'0842916649', messenger:'baimint', phone:'0962264469', phone2:'0842916649', logo:'', cover:'', storeCover:'', detailFooterCover:'', postAvatar:''},
   featured:['เมนบอร์ด iPhone','เมนบอร์ด Android'],
   posts:[
     {id:101,images:[],caption:'🔥 จอแท้ถอด iPhone 11-13 พร้อมส่ง งานสวยคมชัด ติดตั้งไว\nรับประกันงานติดตั้ง สนใจทักสอบถามได้เลย',price:1200,price2:2200,ts:Date.now()-3600000,likes:17},
@@ -890,6 +859,8 @@ function migrate(d){
   if(typeof d.shop.storeCover==='undefined') d.shop.storeCover='';
   if(typeof d.shop.postAvatar==='undefined') d.shop.postAvatar='';
   if(typeof d.shop.detailFooterCover==='undefined') d.shop.detailFooterCover='';
+  // เลิกใช้รหัสผ่านแอดมินแบบเก่า — ความปลอดภัยใช้ Firebase Email Link เท่านั้น
+  if(Object.prototype.hasOwnProperty.call(d.shop,'pass')) delete d.shop.pass;
   return d;
 }
 function loadLocal(){
@@ -899,6 +870,22 @@ function loadLocal(){
 function saveLocal(){ try{localStorage.setItem(DB_KEY,JSON.stringify(db))}catch(e){} }
 
 /* ---------- Firebase ---------- */
+// ความปลอดภัยแอดมิน: ลูกค้าอ่านหน้าเว็บได้ปกติ แต่สิทธิ์เขียน/แก้ไขต้องยืนยันอีเมลเจ้าของ
+// อีเมลเจ้าของร้านเพียงบัญชีเดียวที่ได้รับอนุญาตให้เข้าแอดมิน
+const ADMIN_EMAIL = 'suneeporn.korkied@gmail.com';
+const ADMIN_PENDING_EMAIL_KEY = 'baimint_admin_pending_email';
+const ADMIN_DEVICE_OK_KEY = 'baimint_admin_device_verified';
+let isAdmin=false, authUser=null, fauth=null, adminAuthReady=false, adminAutoOpen=false;
+function normEmail(v){return String(v||'').trim().toLowerCase()}
+function adminEmailConfigured(){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ADMIN_EMAIL)}
+function isAllowedAdminUser(user){
+  return !!(user && user.emailVerified && adminEmailConfigured() && normEmail(user.email)===normEmail(ADMIN_EMAIL));
+}
+function maskAdminEmail(){
+  if(!adminEmailConfigured()) return 'ยังไม่ได้กำหนดอีเมลเจ้าของ';
+  const [u,d]=ADMIN_EMAIL.split('@');
+  return (u.length<=2?u[0]+'*':u.slice(0,2)+'***')+'@'+d;
+}
 const firebaseConfig = {
   apiKey: "AIzaSyDN7Hnf-0EEAxnabvlGPgVEL6limOjn6dI",
   authDomain: "baimint888-a8088.firebaseapp.com",
@@ -911,6 +898,7 @@ let fdb=null, fbReady=false, fbInitDone=false;
 try{
   firebase.initializeApp(firebaseConfig);
   fdb=firebase.firestore();
+  fauth=firebase.auth();
   fbReady=true;
 }catch(e){ console.warn('Firebase init error:', e); }
 
@@ -1027,7 +1015,7 @@ async function buildCollagesInBackground(){
       p.ogImage=httpImgs[0]; p._ogKey=httpImgs[0]; changed=true;
     }
   }
-  if(changed && fbReady){
+  if(changed && fbReady && isAdmin && isAllowedAdminUser(authUser)){
     try{
       saveLocal();
       const cloud=stripBase64(JSON.parse(JSON.stringify(db)));
@@ -1045,6 +1033,11 @@ function stripBase64(o){
 async function save(){
   saveLocal();
   if(!fbReady){ return; }
+  // ฝั่งหน้าเว็บไม่ส่งข้อมูลแก้ไขขึ้นคลาวด์ถ้ายังไม่ได้ยืนยันตัวตนเป็นแอดมิน
+  if(!isAdmin || !isAllowedAdminUser(authUser)){
+    console.warn('Cloud write blocked: admin authentication required');
+    return;
+  }
   if(saving) return; saving=true;
   setCloudStatus('saving');
   try{
@@ -1121,9 +1114,8 @@ function renderAll(){ renderShop(); renderChips(); renderList(); renderFeed(); r
 let db=loadLocal();
 
 /* ---------- state ---------- */
-let activeCat='ทั้งหมด', query='', isAdmin=false, view='feed';
-let storeCat='ทั้งหมด', storeQuery='', storeSort='latest', currentProductId=null, productHeroIndex=0, detailQty=1;
-let storeCart=[]; try{storeCart=JSON.parse(localStorage.getItem('storeCart_v1')||'[]')||[]}catch(e){storeCart=[]}
+let activeCat='ทั้งหมด', query='', view='feed';
+let storeCat='ทั้งหมด', storeQuery='', storeSort='latest', currentProductId=null, productHeroIndex=0;
 
 /* ---------- views ---------- */
 function switchView(v){
@@ -1138,7 +1130,6 @@ function switchView(v){
   if(v==='feed') renderFeed();
   if(v==='store') renderStore();
   if(v==='product'&&currentProductId) renderProductDetail(currentProductId);
-  updateCartBadge();
   window.scrollTo(0,0);
 }
 function setUrlForView(params){
@@ -1258,7 +1249,7 @@ function renderFeed(){
 const likedSet=new Set();
 function sharePost(id){
   const p=db.posts.find(x=>x.id===id); if(!p)return;
-  const postUrl=location.origin+'/post?id='+id;
+  const postUrl=PUBLIC_SHOP_BASE+'/?view=feed&post='+encodeURIComponent(id);
   let text=(p.caption||'').trim();
   if(p.price) text+=(text?'\n':'')+'ราคา '+priceText(p);
   text+=(text?'\n':'')+'— '+db.shop.name;
@@ -1442,8 +1433,9 @@ function delNews(id){ if(confirm('ลบข่าวนี้?')){ db.news=db.ne
 function shareNews(id){
   const p=db.news.find(x=>x.id===id); if(!p)return;
   const text=(p.text||'')+'\n— '+db.shop.name;
-  if(navigator.share) navigator.share({title:db.shop.name,text,url:location.href}).catch(()=>{});
-  else navigator.clipboard?.writeText(text+'\n'+location.href).then(()=>flash('คัดลอกข้อความ+ลิงก์แล้ว'),()=>flash('แชร์ไม่สำเร็จ'));
+  const newsUrl=PUBLIC_SHOP_BASE+'/?view=news';
+  if(navigator.share) navigator.share({title:db.shop.name,text,url:newsUrl}).catch(()=>{});
+  else navigator.clipboard?.writeText(text+'\n'+newsUrl).then(()=>flash('คัดลอกข้อความ+ลิงก์แล้ว'),()=>flash('แชร์ไม่สำเร็จ'));
 }
 
 
@@ -1513,7 +1505,7 @@ function renderStoreFooter(){
 }
 function renderStore(){
   const grid=document.getElementById('storeGrid'); if(!grid) return;
-  renderStoreHero(); renderStoreChips(); renderStoreFooter(); updateCartBadge();
+  renderStoreHero(); renderStoreChips(); renderStoreFooter();
   const inp=document.getElementById('storeSearch'); if(inp&&inp.value!==storeQuery) inp.value=storeQuery;
   const sorter=document.getElementById('storeSort');if(sorter)sorter.value=storeSort;
   const q=(storeQuery||'').trim().toLowerCase();
@@ -1562,7 +1554,6 @@ function renderProductGalleryOnly(){
 function detailRow(k,v){ return v?`<div class="detail-row"><div class="k">${esc(k)}</div><div>${esc(v)}</div></div>`:''; }
 function detailFact(icon,k,v){return v?`<div class="detail-fact"><div class="fk">${icon} ${esc(k)}</div><div class="fv">${esc(v)}</div></div>`:''}
 function productDirectUrl(id){const u=new URL(PUBLIC_SHOP_BASE);u.searchParams.set('product',id);return u.toString()}
-function publicShopUrl(view=''){const u=new URL(PUBLIC_SHOP_BASE);if(view)u.searchParams.set('view',view);return u.toString()}
 function productPostText(p){
   const bits=[productCapacity(p),p.color,p.itemType].filter(Boolean).join(' | ');
   const lines=[`📱 ${productDisplayName(p)}${bits?' — '+bits:''}`,hasStorePrice(p)?`💰 ราคาโดยประมาณ ${storePrice(p)} (สามารถต่อรองได้)`:`💰 ${storePrice(p)}`];
@@ -1581,7 +1572,7 @@ function renderProductDetail(id){
   if(!p || (p.status==='ซ่อน'&&!isAdmin)){
     el.innerHTML=`<div class="detail-topline"><button class="detail-back" onclick="openStore()">← กลับไปหน้าสินค้า</button></div><div class="detail-missing"><b>ไม่พบสินค้านี้</b><div style="margin-top:6px;color:var(--ink-soft)">สินค้าอาจถูกซ่อนหรือยกเลิกแล้ว</div><button class="btn" style="max-width:260px" onclick="openStore()">ดูสินค้าทั้งหมด</button></div>`;return;
   }
-  currentProductId=Number(id);detailQty=1;const sold=p.status==='ขายแล้ว',imgs=p.images||[];
+  currentProductId=Number(id);const sold=p.status==='ขายแล้ว',imgs=p.images||[];
   if(productHeroIndex>=imgs.length)productHeroIndex=0;
   let rel=(db.storeProducts||[]).filter(x=>x.id!==p.id&&x.status!=='ซ่อน'&&x.cat===p.cat).sort((a,b)=>(a.status==='ขายแล้ว')-(b.status==='ขายแล้ว')).slice(0,3);
   if(rel.length<3){const ids=new Set(rel.map(x=>x.id));rel=rel.concat((db.storeProducts||[]).filter(x=>x.id!==p.id&&x.status!=='ซ่อน'&&!ids.has(x.id)).slice(0,3-rel.length));}
@@ -1627,10 +1618,8 @@ function renderProductDetail(id){
           ${detailRow('ยี่ห้อ',p.brand)}${detailRow('รุ่น',p.model)}${detailRow('ความจุ',productCapacity(p))}${detailRow('ประเภท',p.itemType)}${detailRow('สี',p.color)}${detailRow('สภาพ',p.condition)}${detailRow('ประกันร้าน',p.warranty)}${detailRow('อุปกรณ์ในกล่อง',p.accessories)}${detailRow('ตำหนิ',p.flaws)}
         </div>
         ${p.note?`<div class="detail-note"><b>หมายเหตุ</b><br>${esc(p.note)}</div>`:''}
-        <div class="detail-qtyline"><span class="detail-qtylabel">จำนวน</span><div class="detail-qty"><button onclick="changeDetailQty(-1)" ${sold?'disabled':''}>−</button><span id="detailQty">1</span><button onclick="changeDetailQty(1)" ${sold?'disabled':''}>+</button></div></div>
         <div class="detail-actions">
-          <button class="cart ${sold?'disabled':''}" onclick="${sold?'':'addToCart('+p.id+')'}"><svg class="btn-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.1 10.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 1.9-1.5L21 7H6"/><circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/></svg>${sold?'สินค้านี้ขายแล้ว':'เพิ่มลงตะกร้า'}</button>
-          <a class="buy ${sold?'disabled':''}" href="${sold?'#':buyUrl}" ${sold?'':'target="_blank"'}><svg class="btn-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.6-4.8A8 8 0 1 1 21 15Z"/><path d="M8 11h.01M12 11h.01M16 11h.01"/></svg>${sold?'ไม่สามารถสั่งซื้อ':'สั่งซื้อ / ทักแอดมิน'}</a>
+          <a class="buy ${sold?'disabled':''}" href="${sold?'#':buyUrl}" ${sold?'':'target="_blank"'}><svg class="btn-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.6-4.8A8 8 0 1 1 21 15Z"/><path d="M8 11h.01M12 11h.01M16 11h.01"/></svg>${sold?'สินค้านี้ขายแล้ว':'ทักแอดมิน'}</a>
           <button class="share" onclick="shareStoreProduct(${p.id})">↗ แชร์สินค้า</button>
         </div>
         <div class="detail-postbox">
@@ -1670,10 +1659,8 @@ function renderProductDetail(id){
           </div>
         </div>
         <div class="mobile-thumbs" id="productThumbsMobile">${imgs.map((src,i)=>`<button class="${i===productHeroIndex?'on':''}" onclick="setProductHero(${i})"><img src="${src}" alt="รูปที่ ${i+1}"></button>`).join('')}</div>
-        <div class="mobile-qty"><button onclick="changeDetailQty(-1)" ${sold?'disabled':''}>−</button><span id="detailQtyMobile">1</span><button onclick="changeDetailQty(1)" ${sold?'disabled':''}>+</button></div>
         <div class="mobile-main-actions">
-          <button class="cart ${sold?'disabled':''}" onclick="${sold?'':'addToCart('+p.id+')'}"><svg class="btn-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.1 10.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 1.9-1.5L21 7H6"/><circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/></svg>${sold?'สินค้านี้ขายแล้ว':'เพิ่มลงตะกร้า'}</button>
-          <a class="buy ${sold?'disabled':''}" href="${sold?'#':buyUrl}" ${sold?'':'target="_blank"'}><svg class="btn-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.6-4.8A8 8 0 1 1 21 15Z"/><path d="M8 11h.01M12 11h.01M16 11h.01"/></svg>${sold?'ไม่สามารถสั่งซื้อ':'สั่งซื้อ / ทักแอดมิน'}</a>
+          <a class="buy ${sold?'disabled':''}" href="${sold?'#':buyUrl}" ${sold?'':'target="_blank"'}><svg class="btn-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.6-4.8A8 8 0 1 1 21 15Z"/><path d="M8 11h.01M12 11h.01M16 11h.01"/></svg>${sold?'สินค้านี้ขายแล้ว':'ทักแอดมิน'}</a>
         </div>
       </div>
       <div class="mobile-share-panel">
@@ -1691,10 +1678,8 @@ function renderProductDetail(id){
     ${detailFooterHtml}
     <div class="detail-mobilebar">
       <div class="detail-mobileprice"><small>${hasStorePrice(p)?'ราคาโดยประมาณ • ต่อรองได้':'ราคา'}</small><b>${storePrice(p)}</b></div>
-      <a class="mbuy ${sold?'disabled':''}" href="${sold?'#':buyUrl}" ${sold?'':'target="_blank"'}>💬 ทักแอดมิน</a>
-      <button class="mcart ${sold?'disabled':''}" onclick="${sold?'':'addToCart('+p.id+')'}">🛒 ${sold?'ขายแล้ว':'ใส่ตะกร้า'}</button>
+      <a class="mbuy ${sold?'disabled':''}" href="${sold?'#':buyUrl}" ${sold?'':'target="_blank"'}>💬 ${sold?'สินค้าขายแล้ว':'ทักแอดมิน'}</a>
     </div>`;
-  updateCartBadge();
 }
 let productZoomScale=1;
 function ensureProductZoomOverlay(){
@@ -1756,24 +1741,6 @@ function changeProductZoom(delta){
 function resetProductZoom(){productZoomScale=1;applyProductZoom()}
 function toggleProductZoom(){productZoomScale=productZoomScale>1.05?1:2;applyProductZoom()}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeProductZoom()});
-function changeDetailQty(d){detailQty=Math.max(1,Math.min(99,detailQty+(Number(d)||0)));['detailQty','detailQtyMobile'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=detailQty})}
-function saveStoreCart(){try{localStorage.setItem('storeCart_v1',JSON.stringify(storeCart))}catch(e){}updateCartBadge()}
-function updateCartBadge(){const n=storeCart.reduce((a,x)=>a+Number(x.qty||0),0);document.querySelectorAll('#cartBadge,.cart-badge-sync').forEach(e=>e.textContent=n)}
-function addToCart(id){
-  const p=(db.storeProducts||[]).find(x=>Number(x.id)===Number(id));if(!p||p.status==='ขายแล้ว')return;
-  const row=storeCart.find(x=>Number(x.id)===Number(id));if(row)row.qty+=detailQty;else storeCart.push({id:Number(id),qty:detailQty});saveStoreCart();flash('เพิ่มลงตะกร้าแล้ว ✓');
-}
-function cartTotalValue(){return storeCart.reduce((sum,x)=>{const p=(db.storeProducts||[]).find(y=>Number(y.id)===Number(x.id));return sum+(p&&p.status!=='ขายแล้ว'?Number(p.price||0)*Number(x.qty||0):0)},0)}
-function openCart(){renderCart();document.getElementById('cartOverlay').classList.add('show')}
-function closeCart(){document.getElementById('cartOverlay').classList.remove('show')}
-function changeCartQty(id,d){const r=storeCart.find(x=>Number(x.id)===Number(id));if(!r)return;r.qty=Math.max(0,Number(r.qty||0)+d);if(!r.qty)storeCart=storeCart.filter(x=>Number(x.id)!==Number(id));saveStoreCart();renderCart()}
-function renderCart(){
-  const box=document.getElementById('cartItems'),total=document.getElementById('cartTotal'),order=document.getElementById('cartOrderBtn');if(!box)return;
-  storeCart=storeCart.filter(x=>(db.storeProducts||[]).some(p=>Number(p.id)===Number(x.id)&&p.status!=='ซ่อน'));
-  if(!storeCart.length)box.innerHTML='<div class="cart-empty">ตะกร้ายังว่างอยู่<br>เลือกสินค้าที่ต้องการได้เลยค่ะ</div>';
-  else box.innerHTML=storeCart.map(x=>{const p=(db.storeProducts||[]).find(y=>Number(y.id)===Number(x.id));if(!p)return'';const im=storeCover(p);return `<div class="cart-row">${im?`<img src="${im}">`:'<div class="cart-row-ph">📱</div>'}<div><div class="cart-row-name">${esc(p.name)}</div><div class="cart-row-meta">${esc(storeSpecText(p))}</div><div class="cart-row-price">${storePrice(p)} × ${x.qty}</div></div><div><button onclick="changeCartQty(${p.id},1)">＋</button><button onclick="changeCartQty(${p.id},-1)">−</button></div></div>`}).join('');
-  if(total)total.textContent='฿'+fmt(cartTotalValue());if(order)order.href=lineUrl(db.shop.line);saveStoreCart();
-}
 async function copyTextSafe(text,msg='คัดลอกแล้ว ✓'){
   try{await navigator.clipboard.writeText(text);flash(msg);return true}catch(e){
     try{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();flash(msg);return true}catch(_){flash('คัดลอกไม่สำเร็จ');return false}
@@ -2000,22 +1967,112 @@ document.getElementById('adminBtn').onclick=()=>{ isAdmin?adminPanel():loginShee
 
 function loginSheet(){
   overlay.classList.remove('adminmode');sheet.classList.remove('adminsheet');
+  if(!adminEmailConfigured()){
+    sheet.innerHTML=`
+      <h2 class="ui">🔒 ระบบแอดมินถูกล็อกไว้</h2>
+      <p class="desc">ระบบความปลอดภัยอีเมลถูกติดตั้งแล้ว แต่ยังไม่ได้กำหนดอีเมลเจ้าของร้าน จึงปิดการเข้าแอดมินไว้ก่อนเพื่อความปลอดภัย</p>
+      <div style="padding:12px;border:1px solid #f0c36d;background:#fff8e6;border-radius:12px;color:#7a5712;margin:12px 0">ส่งอีเมลเจ้าของร้านมาให้ฉัน 1 อีเมล แล้วฉันจะใส่ให้ในไฟล์และเปิดระบบยืนยันตัวตนให้ทันที</div>
+      <button class="btn ghost" onclick="closeSheet()">ปิด</button>`;
+    overlay.classList.add('show');
+    return;
+  }
   sheet.innerHTML=`
-    <h2 class="ui">เข้าสู่ระบบแอดมิน</h2>
-    <p class="desc">สำหรับเจ้าของร้านเท่านั้น</p>
-    <label>รหัสผ่าน</label>
-    <input id="pass" type="password" placeholder="ใส่รหัส" inputmode="numeric">
-    <div class="err" id="loginErr">รหัสไม่ถูกต้อง</div>
-    <button class="btn" onclick="doLogin()">เข้าสู่ระบบ</button>
+    <h2 class="ui">🔐 ยืนยันตัวตนเจ้าของร้าน</h2>
+    <p class="desc">เฉพาะอีเมลเจ้าของร้านที่ยืนยันแล้วเท่านั้นจึงจะเข้าแอดมินได้</p>
+    <div style="padding:12px 14px;border:1px solid #dbe7f5;background:#f7fbff;border-radius:12px;margin:12px 0">
+      <div style="font-size:.72rem;color:#667085">อีเมลเจ้าของที่อนุญาต</div>
+      <b style="font-size:.92rem;color:#173b61">${maskAdminEmail()}</b>
+    </div>
+    <button class="btn" id="sendAdminLinkBtn" onclick="sendAdminLoginLink()">📧 ส่งลิงก์ยืนยันเข้าอีเมล</button>
+    <p class="desc" style="margin-top:10px">เปิดลิงก์จากอีเมลบน <b>เครื่อง/เบราว์เซอร์เครื่องนี้</b> เมื่อยืนยันแล้วระบบจะจำการเข้าสู่ระบบไว้เฉพาะเครื่องนี้จนกว่าจะกดออกจากระบบหรือล้างข้อมูลเบราว์เซอร์</p>
+    <div class="err" id="loginErr" style="display:none"></div>
     <button class="btn ghost" onclick="closeSheet()">ยกเลิก</button>`;
   overlay.classList.add('show');
-  setTimeout(()=>document.getElementById('pass').focus(),100);
 }
-function doLogin(){
-  if(document.getElementById('pass').value===db.shop.pass){isAdmin=true;adminPanel();renderList();renderFeed();renderNews();}
-  else document.getElementById('loginErr').style.display='block';
+let pendingStoreEditId=null;
+async function sendAdminLoginLink(){
+  if(!fauth || !adminEmailConfigured()) return loginSheet();
+  const btn=document.getElementById('sendAdminLinkBtn');
+  const err=document.getElementById('loginErr');
+  if(btn){btn.disabled=true;btn.textContent='กำลังส่งลิงก์...'}
+  if(err) err.style.display='none';
+  try{
+    await fauth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    const cleanUrl=window.location.origin+window.location.pathname+'?adminEmailLogin=1';
+    await fauth.sendSignInLinkToEmail(ADMIN_EMAIL,{url:cleanUrl,handleCodeInApp:true});
+    localStorage.setItem(ADMIN_PENDING_EMAIL_KEY,ADMIN_EMAIL);
+    sheet.innerHTML=`
+      <h2 class="ui">✅ ส่งลิงก์แล้ว</h2>
+      <p class="desc">ตรวจอีเมล <b>${maskAdminEmail()}</b> แล้วกดลิงก์ยืนยันบนเครื่องนี้</p>
+      <div style="padding:12px;border:1px solid #b7dfc3;background:#f2fff6;border-radius:12px;color:#25633b;margin:12px 0">เมื่อกดลิงก์สำเร็จ เว็บจะจำสิทธิ์แอดมินไว้ในเบราว์เซอร์เครื่องนี้โดยอัตโนมัติ</div>
+      <button class="btn ghost" onclick="closeSheet()">ปิด</button>`;
+  }catch(e){
+    console.warn('send admin email link failed',e);
+    if(btn){btn.disabled=false;btn.textContent='📧 ส่งลิงก์ยืนยันเข้าอีเมล'}
+    if(err){
+      let msg='ส่งลิงก์ไม่สำเร็จ';
+      if(e&&e.code==='auth/unauthorized-continue-uri') msg='โดเมนนี้ยังไม่ได้เพิ่มใน Firebase Authorized domains';
+      else if(e&&e.code==='auth/operation-not-allowed') msg='ยังไม่ได้เปิด Email link sign-in ใน Firebase Authentication';
+      else if(e&&e.message) msg=e.message;
+      err.textContent=msg;err.style.display='block';
+    }
+  }
 }
-function adminPanel(){
+async function completeAdminEmailLink(){
+  if(!fauth || !firebase.auth().isSignInWithEmailLink(window.location.href)) return false;
+  const pendingEmail=localStorage.getItem(ADMIN_PENDING_EMAIL_KEY)||'';
+  // บังคับเปิดลิงก์บนเครื่องเดิมที่เป็นผู้ขอลิงก์ เพื่อไม่ย้ายสถานะการยืนยันข้ามเครื่อง
+  if(!pendingEmail || normEmail(pendingEmail)!==normEmail(ADMIN_EMAIL)){
+    overlay.classList.remove('adminmode');sheet.classList.remove('adminsheet');
+    sheet.innerHTML=`<h2 class="ui">🔒 ยืนยันไม่ได้บนเครื่องนี้</h2><p class="desc">ลิงก์นี้ต้องเปิดบนเครื่อง/เบราว์เซอร์เดียวกับที่กดขอลิงก์เข้าสู่ระบบแอดมิน</p><button class="btn" onclick="loginSheet()">ขอลิงก์ใหม่บนเครื่องนี้</button>`;
+    overlay.classList.add('show');
+    return true;
+  }
+  try{
+    adminAutoOpen=true;
+    await fauth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    const result=await fauth.signInWithEmailLink(pendingEmail,window.location.href);
+    localStorage.removeItem(ADMIN_PENDING_EMAIL_KEY);
+    if(!isAllowedAdminUser(result.user)){
+      await fauth.signOut();
+      throw new Error('อีเมลนี้ไม่ได้รับอนุญาตให้เข้าแอดมิน');
+    }
+    localStorage.setItem(ADMIN_DEVICE_OK_KEY,'1');
+    history.replaceState({},document.title,window.location.origin+window.location.pathname);
+    return true;
+  }catch(e){
+    console.warn('complete admin email link failed',e);
+    overlay.classList.remove('adminmode');sheet.classList.remove('adminsheet');
+    sheet.innerHTML=`<h2 class="ui">ยืนยันตัวตนไม่สำเร็จ</h2><p class="desc">${esc(e&&e.message?e.message:'กรุณาขอลิงก์ใหม่')}</p><button class="btn" onclick="loginSheet()">ขอลิงก์ใหม่</button>`;
+    overlay.classList.add('show');
+    return true;
+  }
+}
+async function initAdminAuth(){
+  if(!fauth){adminAuthReady=true;return}
+  try{await fauth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)}catch(e){console.warn('auth persistence failed',e)}
+  fauth.onAuthStateChanged(async user=>{
+    authUser=user||null;
+    const allowed=isAllowedAdminUser(user);
+    if(user && !allowed){
+      try{await fauth.signOut()}catch(e){}
+      isAdmin=false;authUser=null;localStorage.removeItem(ADMIN_DEVICE_OK_KEY);
+    }else{
+      isAdmin=allowed;
+      if(allowed) localStorage.setItem(ADMIN_DEVICE_OK_KEY,'1');
+    }
+    adminAuthReady=true;
+    renderAll();
+    if(isAdmin && (adminAutoOpen || pendingStoreEditId!==null)){
+      const pendingId=pendingStoreEditId;
+      pendingStoreEditId=null;
+      adminAutoOpen=false;
+      setTimeout(()=>pendingId!==null?editStoreProduct(pendingId):adminPanel('store'),0);
+    }
+  });
+  await completeAdminEmailLink();
+}
+function adminPanel(startTab='store'){
   overlay.classList.add('adminmode');sheet.classList.add('adminsheet');
   sheet.innerHTML=`
     <div class="admin-topbar"><div class="admin-brand">⚙️ &nbsp;แอดมิน</div><button onclick="logoutAdmin()">ออกจากระบบ</button></div>
@@ -2026,9 +2083,14 @@ function adminPanel(){
     <button id="t4" onclick="tab('shop')">ร้าน</button></div>
     <div id="tabbody"></div>
     <button class="btn ghost" onclick="closeSheet()">ปิดหน้าจัดการ</button>`;
-  overlay.classList.add('show');tab('store');
+  overlay.classList.add('show');
+  tab(startTab);
 }
-function logoutAdmin(){isAdmin=false;closeSheet();renderAll();flash('ออกจากระบบแล้ว')}
+async function logoutAdmin(){
+  try{if(fauth) await fauth.signOut()}catch(e){console.warn(e)}
+  isAdmin=false;authUser=null;localStorage.removeItem(ADMIN_DEVICE_OK_KEY);localStorage.removeItem(ADMIN_PENDING_EMAIL_KEY);
+  closeSheet();renderAll();flash('ออกจากระบบแล้ว ✓');
+}
 function tab(name){
   ['t0','t1','t2','t3','t4'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('on')});
   const target=document.getElementById({store:'t0',posts:'t1',add:'t2',cat:'t3',shop:'t4'}[name]); if(target) target.classList.add('on');
@@ -2119,7 +2181,7 @@ function tab(name){
       <label>Facebook Messenger (username เพจ เช่น bigmobile หรือลิงก์ m.me)</label><input id="s-msgr" value="${esc(s.messenger)}" placeholder="เช่น bigmobile">
       <label>เบอร์โทร (เบอร์หลัก)</label><input id="s-phone" value="${esc(s.phone)}">
       <label>เบอร์โทรสำรอง (ถ้ามี)</label><input id="s-phone2" value="${esc(s.phone2||'')}" placeholder="เว้นว่างได้">
-      <label>รหัสผ่านแอดมิน</label><input id="s-pass" value="${esc(s.pass)}">
+      <div style="margin:12px 0;padding:11px 12px;border:1px solid #dbe7f5;background:#f7fbff;border-radius:10px;font-size:.75rem;color:#41617f">🔐 แอดมินใช้การยืนยันผ่านอีเมลเจ้าของร้าน ระบบไม่ใช้รหัสผ่านตัวเลขอีกต่อไป</div>
       <button class="btn" onclick="saveShop()">บันทึกข้อมูลร้าน</button>
       <div style="margin-top:22px;padding-top:16px;border-top:1px solid #e5e7eb">
         <label style="font-weight:600">สำรอง / กู้คืนข้อมูล</label>
@@ -2148,7 +2210,7 @@ function renderStoreAdminTab(){
       <label>รูปสินค้า <span style="font-weight:400;color:#667085">(เลือกหลายรูปพร้อมกันได้ • รูปแรกที่เลือก = รูปปก • สูงสุด 8 รูป)</span></label>
       <div style="background:#f5f9ff;border:1px solid #dce9f8;border-radius:9px;padding:8px 10px;margin:0 0 8px;color:#41617f;font-size:.69rem">ระบบจะใส่ลายน้ำ <b>mn only shop</b> สีขาวจาง ๆ ให้รูปที่แสดงบนเว็บอัตโนมัติ ส่วนรูปต้นฉบับสะอาดจะใช้เฉพาะตอนสร้างภาพโพสต์ของสินค้า <b>พร้อมขาย • มือ 1 / มือ 2</b> เท่านั้น</div>
       <div class="imgrow" id="storeThumbs"></div>
-      <button type="button" class="upbtn store-upload" id="storeUpBtn" onclick="document.getElementById('storeFile').click()"><strong>＋</strong><span>เลือกหลายรูป</span></button>
+      <button type="button" class="upbtn store-upload" id="storeUpBtn" onclick="openStoreMultiPicker()"><strong>＋</strong><span>เลือกหลายรูปครั้งเดียว</span></button>
       <input type="file" id="storeFile" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="pickStoreImgs(this)">
       <div class="store-form-grid">
         <div><label>ประเภทเครื่อง *</label><select id="sp-itemType"><option value="มือ 1" ${p&&p.itemType==='มือ 1'?'selected':''}>มือ 1</option><option value="มือ 2" ${!p||p.itemType!=='มือ 1'?'selected':''}>มือ 2</option></select></div>
@@ -2182,10 +2244,28 @@ function renderStoreAdminTab(){
   renderStoreThumbs();
 }
 function editStoreProduct(id){
-  const p=(db.storeProducts||[]).find(x=>Number(x.id)===Number(id)); if(!p)return;
-  editingStoreProductId=Number(id); storeDraftImgs=[...(p.images||[])]; storeDraftOriginalImgs=[...(p.originalImages||p.images||[])];
-  if(!isAdmin){ adminPanel(); } else { if(!document.getElementById('tabbody')) adminPanel(); else tab('store'); }
-  setTimeout(()=>{const sh=document.querySelector('.sheet'); if(sh) sh.scrollTop=0;},30);
+  const p=(db.storeProducts||[]).find(x=>Number(x.id)===Number(id));
+  if(!p){flash('ไม่พบสินค้าที่ต้องการแก้ไข');return;}
+
+  // กด "แก้ไขสินค้านี้" แล้วเข้าฟอร์มแก้ไขของสินค้านั้นโดยตรง
+  if(!isAdmin){
+    pendingStoreEditId=Number(id);
+    loginSheet();
+    return;
+  }
+
+  editingStoreProductId=Number(id);
+  storeDraftImgs=[...(p.images||[])];
+  storeDraftOriginalImgs=[...(p.originalImages||p.images||[])];
+
+  // สร้างหน้าแอดมินใหม่ทุกครั้ง เพื่อไม่ให้ค้างอยู่หน้ารายละเอียด/แท็บอื่น
+  adminPanel('store');
+  requestAnimationFrame(()=>{
+    const sh=document.getElementById('sheet');
+    if(sh) sh.scrollTop=0;
+    const form=document.querySelector('#tabbody .store-formbox');
+    if(form) form.scrollIntoView({block:'start',behavior:'auto'});
+  });
 }
 function cancelStoreEdit(){ editingStoreProductId=null; storeDraftImgs=[]; storeDraftOriginalImgs=[]; tab('store'); }
 async function hideStoreProduct(id){
@@ -2193,22 +2273,55 @@ async function hideStoreProduct(id){
   if(!confirm('ซ่อนสินค้านี้จากหน้าร้าน? ข้อมูลจะยังอยู่และสามารถแก้ไขกลับเป็นพร้อมขายได้')) return;
   p.status='ซ่อน'; await save(); renderStore(); tab('store'); flash('ซ่อนสินค้าแล้ว ✓');
 }
+function openStoreMultiPicker(){
+  const input=document.getElementById('storeFile');
+  if(!input)return;
+  if(storeDraftImgs.length>=8){flash('ใส่รูปได้สูงสุด 8 รูป');return;}
+  // ล้างค่าเดิมก่อนเปิด เพื่อให้เลือกรูปชุดเดิมซ้ำได้ และยืนยันว่าเป็นโหมดเลือกหลายรูป
+  input.value='';
+  input.multiple=true;
+  input.click();
+}
 async function pickStoreImgs(input){
-  const files=Array.from(input.files||[]); if(!files.length)return;
+  // คัดลอก FileList ทันทีหลังผู้ใช้กดยืนยันในอัลบั้ม แล้วทำตามลำดับที่ระบบส่งมา
+  // ประมวลผลทีละรูปเพื่อไม่กินแรมมือถือมากเกินไป และแสดงรูปขึ้นหน้าจอทันทีทีละลำดับ
+  const selected=Array.from(input.files||[]);
+  if(!selected.length)return;
+
+  const slots=Math.max(0,8-storeDraftImgs.length);
+  if(!slots){input.value='';flash('ใส่รูปได้สูงสุด 8 รูป');return;}
+
+  const picked=selected.slice(0,slots);
+  const skipped=Math.max(0,selected.length-picked.length);
   let added=0,failed=0;
-  // ประมวลผลตามลำดับที่ FileList ส่งมาจากอัลบั้ม รูปแรก = ลำดับ 1 / รูปปก
-  for(const f of files){
-    if(storeDraftImgs.length>=8){flash('ใส่รูปได้สูงสุด 8 รูป');break}
+
+  flash('กำลังเพิ่ม '+picked.length+' รูป...');
+  for(let i=0;i<picked.length;i++){
+    const f=picked[i];
     try{
       const clean=await resizeImg(f,1200,0.90,false);
       const marked=await resizeImg(f,1200,0.88,true);
       storeDraftOriginalImgs.push(clean);
       storeDraftImgs.push(marked);
       added++;
-    }catch(e){failed++;console.warn(e)}
+      renderStoreThumbs();
+      if(picked.length>1) flash('กำลังเพิ่มรูป '+(i+1)+' / '+picked.length+'...');
+    }catch(e){
+      failed++;
+      console.warn('store image failed:',f.name,e);
+    }
   }
-  input.value='';renderStoreThumbs();
-  if(failed) flash('อ่านรูปบางไฟล์ไม่ได้ — แนะนำ JPG / PNG'); else if(added) flash('เพิ่ม '+added+' รูปตามลำดับที่เลือก ✓');
+
+  input.value='';
+  renderStoreThumbs();
+
+  if(skipped){
+    flash('เพิ่ม '+added+' รูปแล้ว • รับได้สูงสุด 8 รูป จึงข้าม '+skipped+' รูป');
+  }else if(failed){
+    flash('เพิ่ม '+added+' รูป • อ่านไม่ได้ '+failed+' รูป — แนะนำ JPG / PNG');
+  }else if(added){
+    flash('เพิ่ม '+added+' รูปตามลำดับที่เลือก ✓');
+  }
 }
 function renderStoreThumbs(){
   const box=document.getElementById('storeThumbs');if(!box)return;
@@ -2471,7 +2584,6 @@ function saveShop(){
   db.shop.messenger=document.getElementById('s-msgr').value.trim();
   db.shop.phone=document.getElementById('s-phone').value.trim();
   db.shop.phone2=document.getElementById('s-phone2').value.trim();
-  db.shop.pass=document.getElementById('s-pass').value.trim();
   save();renderShop();flash('บันทึกแล้ว ✓');
 }
 function flash(msg){
@@ -2483,8 +2595,10 @@ function flash(msg){
 /* ---------- init ---------- */
 renderAll();
 routeFromUrl();
+initAdminAuth();
 initCloud();
 </script>
+<script>window.BAIMINT_BUILD='V24-email-auth-restored';</script>
 </body>
 </html>
 
