@@ -382,7 +382,21 @@
   .detail-layout{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(360px,.92fr);gap:0;background:#fff}
   .gallery{padding:22px;background:linear-gradient(145deg,#f8fbff,#ffffff);border-right:1px solid #e5ebf2;position:relative}
   .gallery-main{position:relative;aspect-ratio:1/1;background:#fff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.75)}
-  .gallery-main img{width:100%;height:100%;object-fit:contain;padding:18px;background:#fff}
+  .gallery-main img{width:100%;height:100%;object-fit:contain;padding:18px;background:#fff;cursor:zoom-in}
+  .image-zoom-btn{position:absolute;right:12px;top:12px;width:42px;height:42px;border:1px solid #d9e5f2;border-radius:50%;background:rgba(255,255,255,.95);color:#075dbd;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:5;box-shadow:0 5px 16px rgba(8,35,72,.13);backdrop-filter:blur(6px)}
+  .image-zoom-btn svg{width:21px;height:21px}
+  .image-zoom-btn:active{transform:scale(.96)}
+  .image-zoom-overlay{position:fixed;inset:0;background:rgba(4,13,28,.94);z-index:12000;display:none;flex-direction:column}
+  .image-zoom-overlay.show{display:flex}
+  .image-zoom-head{height:58px;flex:0 0 58px;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 18px;color:#fff;font-family:'Bai Jamjuree',sans-serif;border-bottom:1px solid rgba(255,255,255,.12)}
+  .image-zoom-head b{font-size:.9rem}
+  .image-zoom-close{width:40px;height:40px;border:1px solid rgba(255,255,255,.22);border-radius:50%;background:rgba(255,255,255,.08);color:#fff;font-size:1.25rem;cursor:pointer}
+  .image-zoom-stage{flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:18px;overscroll-behavior:contain}
+  .image-zoom-stage img{display:block;width:100%;height:auto;max-width:none;object-fit:contain;user-select:none;-webkit-user-drag:none}
+  .image-zoom-tools{flex:0 0 auto;display:flex;justify-content:center;align-items:center;gap:8px;padding:10px 12px max(12px,env(safe-area-inset-bottom));background:rgba(9,25,52,.96);border-top:1px solid rgba(255,255,255,.12)}
+  .image-zoom-tools button{min-width:48px;height:42px;border:1px solid rgba(255,255,255,.22);border-radius:10px;background:rgba(255,255,255,.09);color:#fff;font-family:'Bai Jamjuree',sans-serif;font-weight:700;cursor:pointer}
+  .image-zoom-tools .zoom-reset{min-width:74px}
+  .image-zoom-hint{color:#c9d8eb;font-family:'Bai Jamjuree',sans-serif;font-size:.68rem;margin-left:6px}
   .gallery-placeholder{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:5rem;background:#f7f9fc}
   .gallery-counter{position:absolute;right:12px;bottom:12px;background:rgba(5,25,56,.78);color:#fff;border-radius:999px;padding:5px 9px;font-size:.68rem;font-weight:700;backdrop-filter:blur(5px)}
   .gallery-coverlabel{position:absolute;left:12px;top:12px;background:#eaf3ff;color:#075dbd;border:1px solid #cfe3fa;border-radius:999px;padding:5px 9px;font-size:.65rem;font-weight:700;z-index:2}
@@ -592,7 +606,9 @@
     }
     .mobile-topgrid{grid-template-columns:minmax(0,1.06fr) minmax(0,.94fr)!important;gap:14px!important;align-items:start!important}
     .mobile-hero{aspect-ratio:.83/1!important;border:0!important;border-radius:0!important;background:#fff!important;overflow:hidden!important;min-width:0!important}
-    .mobile-hero img{width:100%!important;height:100%!important;object-fit:contain!important;padding:0!important;background:#fff!important}
+    .mobile-hero img{width:100%!important;height:100%!important;object-fit:contain!important;padding:0!important;background:#fff!important;cursor:zoom-in!important}
+    .mobile-hero .image-zoom-btn{right:7px!important;top:7px!important;width:34px!important;height:34px!important;border-radius:50%!important}
+    .mobile-hero .image-zoom-btn svg{width:18px!important;height:18px!important}
     .mobile-hero .gallery-counter{display:none!important}
     .mobile-summary{padding:2px 0 0!important;min-width:0!important;color:#071933!important}
     .mobile-summary .detail-name{font-size:1.28rem!important;line-height:1.03!important;font-weight:700!important;letter-spacing:-.5px!important;color:#05090f!important;margin:0!important;white-space:normal!important}
@@ -848,6 +864,7 @@ function migrate(d){
   if(!d.products) d.products=structuredClone(defaultDB.products);
   d.storeProducts.forEach(p=>{
     if(!p.images) p.images=p.img?[p.img]:[]; delete p.img;
+    if(!p.originalImages) p.originalImages=[...(p.images||[])];
     if(!p.status) p.status='พร้อมขาย';
     if(typeof p.featured==='undefined') p.featured=false;
     if(!p.createdAt) p.createdAt=p.id||Date.now();
@@ -864,7 +881,7 @@ function migrate(d){
     if(p.model && !d.storeModels.includes(p.model)) d.storeModels.push(p.model);
     if(p.capacity && !d.storeCapacities.includes(p.capacity)) d.storeCapacities.push(p.capacity);
   });
-  d.posts.forEach(p=>{ if(!p.images) p.images = p.img ? [p.img] : []; delete p.img; if(typeof p.likes==='undefined') p.likes=0; });
+  d.posts.forEach(p=>{ if(!p.images) p.images = p.img ? [p.img] : []; delete p.img; if(!p.originalImages) p.originalImages=[...(p.images||[])]; if(typeof p.likes==='undefined') p.likes=0; });
   if(typeof d.shop.messenger==='undefined') d.shop.messenger='';
   if(typeof d.shop.phone2==='undefined') d.shop.phone2='';
   if(typeof d.shop.logo==='undefined') d.shop.logo='';
@@ -966,19 +983,23 @@ async function uploadPendingImages(){
     }
   }
   for(const p of db.posts){
-    if(p.images&&p.images.length){
-      for(let i=0;i<p.images.length;i++){
-        if(p.images[i]&&p.images[i].startsWith('data:')){
-          p.images[i]=await uploadDataUrl(p.images[i]);
+    for(const key of ['images','originalImages']){
+      if(p[key]&&p[key].length){
+        for(let i=0;i<p[key].length;i++){
+          if(p[key][i]&&p[key][i].startsWith('data:')){
+            p[key][i]=await uploadDataUrl(p[key][i]);
+          }
         }
       }
     }
   }
   for(const p of db.storeProducts||[]){
-    if(p.images&&p.images.length){
-      for(let i=0;i<p.images.length;i++){
-        if(p.images[i]&&p.images[i].startsWith('data:')){
-          p.images[i]=await uploadDataUrl(p.images[i]);
+    for(const key of ['images','originalImages']){
+      if(p[key]&&p[key].length){
+        for(let i=0;i<p[key].length;i++){
+          if(p[key][i]&&p[key][i].startsWith('data:')){
+            p[key][i]=await uploadDataUrl(p[key][i]);
+          }
         }
       }
     }
@@ -1016,8 +1037,8 @@ async function buildCollagesInBackground(){
 let saving=false;
 function stripBase64(o){
   if(o.shop){ for(const k of ['logo','cover','storeCover','detailFooterCover','postAvatar']){ if(typeof o.shop[k]==='string'&&o.shop[k].startsWith('data:')) o.shop[k]=''; } }
-  if(o.posts) o.posts.forEach(p=>{ if(p.images) p.images=p.images.filter(s=>!(typeof s==='string'&&s.startsWith('data:'))); });
-  if(o.storeProducts) o.storeProducts.forEach(p=>{ if(p.images) p.images=p.images.filter(s=>!(typeof s==='string'&&s.startsWith('data:'))); });
+  if(o.posts) o.posts.forEach(p=>{ for(const key of ['images','originalImages']) if(p[key]) p[key]=p[key].filter(s=>!(typeof s==='string'&&s.startsWith('data:'))); });
+  if(o.storeProducts) o.storeProducts.forEach(p=>{ for(const key of ['images','originalImages']) if(p[key]) p[key]=p[key].filter(s=>!(typeof s==='string'&&s.startsWith('data:'))); });
   return o;
 }
 async function save(){
@@ -1284,6 +1305,9 @@ async function captureFeedPost(id,btn){
     clone.querySelectorAll('.fb-actions').forEach(el=>el.remove());
     clone.querySelectorAll('[onclick]').forEach(el=>el.removeAttribute('onclick'));
 
+    // โพสต์ทั่วไป: ใช้รูปที่แสดงบนเว็บตามปกติ (มีลายน้ำ)
+    // การยกเว้นลายน้ำใช้เฉพาะภาพโพสต์ของสินค้าพร้อมขาย มือ 1 / มือ 2 เท่านั้น
+
     // html2canvas บนมือถือบางรุ่นแคปพื้นหลังกล่องราคาได้ แต่ทำตัวอักษรใน inline-flex หาย
     // จึงสร้างกล่องราคาใหม่แบบ block ด้วย inline style เพื่อให้ข้อความติดในภาพ 100%
     const oldPrice=clone.querySelector('.fb-price');
@@ -1515,12 +1539,19 @@ function renderStore(){
   if(sold.length)html+=`<div class="sold-divider">สินค้าที่ขายแล้วล่าสุด</div>`+sold.map(p=>storeCardHtml(p)).join('');
   grid.innerHTML=html;
 }
+function productZoomButtonHtml(){
+  return `<button class="image-zoom-btn" type="button" aria-label="ขยายรูปภาพ" title="ขยายรูปภาพ" onclick="event.stopPropagation();openProductZoom()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.35-4.35"></path><path d="M11 8v6M8 11h6"></path>
+    </svg>
+  </button>`;
+}
 function setProductHero(i){ productHeroIndex=Number(i)||0; renderProductGalleryOnly(); }
 function renderProductGalleryOnly(){
   const p=(db.storeProducts||[]).find(x=>Number(x.id)===Number(currentProductId)); if(!p) return;
   const imgs=p.images||[]; if(productHeroIndex>=imgs.length) productHeroIndex=0;
-  const heroHtml=imgs.length?`<img src="${imgs[productHeroIndex]}" alt="${esc(productDisplayName(p))}"><span class="gallery-coverlabel">${productHeroIndex===0?'รูปปก':'รูปที่ '+(productHeroIndex+1)}</span><span class="gallery-counter">${productHeroIndex+1} / ${imgs.length}</span>`:`<div class="gallery-placeholder">📱</div>`;
-  const mobileHeroHtml=imgs.length?`<img src="${imgs[productHeroIndex]}" alt="${esc(productDisplayName(p))}"><span class="gallery-counter">${productHeroIndex+1} / ${imgs.length}</span>`:`<div class="gallery-placeholder">📱</div>`;
+  const heroHtml=imgs.length?`<img src="${imgs[productHeroIndex]}" alt="${esc(productDisplayName(p))}" onclick="openProductZoom()">${productZoomButtonHtml()}<span class="gallery-coverlabel">${productHeroIndex===0?'รูปปก':'รูปที่ '+(productHeroIndex+1)}</span><span class="gallery-counter">${productHeroIndex+1} / ${imgs.length}</span>`:`<div class="gallery-placeholder">📱</div>`;
+  const mobileHeroHtml=imgs.length?`<img src="${imgs[productHeroIndex]}" alt="${esc(productDisplayName(p))}" onclick="openProductZoom()">${productZoomButtonHtml()}<span class="gallery-counter">${productHeroIndex+1} / ${imgs.length}</span>`:`<div class="gallery-placeholder">📱</div>`;
   const main=document.getElementById('productHero'); if(main)main.innerHTML=heroHtml;
   const mm=document.getElementById('productHeroMobile'); if(mm)mm.innerHTML=mobileHeroHtml;
   const thumbs=imgs.map((src,i)=>`<button class="${i===productHeroIndex?'on':''}" onclick="setProductHero(${i})"><img src="${src}" alt="รูปที่ ${i+1}"></button>`).join('');
@@ -1574,7 +1605,7 @@ function renderProductDetail(id){
     <div class="detail-card detail-desktop-card"><div class="detail-layout">
       <div class="gallery">
         <div class="gallery-main" id="productHero">
-          ${imgs.length?`<img src="${imgs[productHeroIndex]||imgs[0]}" alt="${esc(productDisplayName(p))}">`:`<div class="gallery-placeholder">📱</div>`}
+          ${imgs.length?`<img src="${imgs[productHeroIndex]||imgs[0]}" alt="${esc(productDisplayName(p))}" onclick="openProductZoom()">${productZoomButtonHtml()}`:`<div class="gallery-placeholder">📱</div>`}
           ${imgs.length?`<span class="gallery-coverlabel">${productHeroIndex===0?'รูปปก':'รูปที่ '+(productHeroIndex+1)}</span><span class="gallery-counter">${productHeroIndex+1} / ${imgs.length}</span>`:''}
         </div>
         <div class="gallery-thumbs" id="productThumbs">${imgs.map((src,i)=>`<button class="${i===productHeroIndex?'on':''}" onclick="setProductHero(${i})"><img src="${src}" alt="รูปที่ ${i+1}"></button>`).join('')}</div>
@@ -1617,7 +1648,7 @@ function renderProductDetail(id){
       <div class="mobile-product-card">
         <div class="mobile-topgrid">
           <div class="mobile-hero" id="productHeroMobile">
-            ${imgs.length?`<img src="${imgs[productHeroIndex]||imgs[0]}" alt="${esc(productDisplayName(p))}">`:`<div class="gallery-placeholder">📱</div>`}
+            ${imgs.length?`<img src="${imgs[productHeroIndex]||imgs[0]}" alt="${esc(productDisplayName(p))}" onclick="openProductZoom()">${productZoomButtonHtml()}`:`<div class="gallery-placeholder">📱</div>`}
             ${imgs.length?`<span class="gallery-counter">${productHeroIndex+1} / ${imgs.length}</span>`:''}
           </div>
           <div class="mobile-summary">
@@ -1663,6 +1694,66 @@ function renderProductDetail(id){
     </div>`;
   updateCartBadge();
 }
+let productZoomScale=1;
+function ensureProductZoomOverlay(){
+  let ov=document.getElementById('productImageZoomOverlay');
+  if(ov)return ov;
+  ov=document.createElement('div');
+  ov.id='productImageZoomOverlay';
+  ov.className='image-zoom-overlay';
+  ov.innerHTML=`
+    <div class="image-zoom-head">
+      <b id="productZoomTitle">ดูรูปแบบขยาย</b>
+      <button class="image-zoom-close" type="button" onclick="closeProductZoom()" aria-label="ปิด">✕</button>
+    </div>
+    <div class="image-zoom-stage" id="productZoomStage" onclick="if(event.target===this)closeProductZoom()">
+      <img id="productZoomImg" alt="รูปสินค้าแบบขยาย" draggable="false" ondblclick="toggleProductZoom()">
+    </div>
+    <div class="image-zoom-tools">
+      <button type="button" onclick="changeProductZoom(-.25)">−</button>
+      <button type="button" class="zoom-reset" id="productZoomPct" onclick="resetProductZoom()">100%</button>
+      <button type="button" onclick="changeProductZoom(.25)">＋</button>
+      <span class="image-zoom-hint">แตะสองครั้งเพื่อซูม</span>
+    </div>`;
+  document.body.appendChild(ov);
+  return ov;
+}
+function openProductZoom(){
+  const p=(db.storeProducts||[]).find(x=>Number(x.id)===Number(currentProductId));
+  if(!p)return;
+  const imgs=p.images||[];
+  const src=imgs[productHeroIndex]||imgs[0];
+  if(!src)return;
+  const ov=ensureProductZoomOverlay();
+  const im=document.getElementById('productZoomImg');
+  document.getElementById('productZoomTitle').textContent=`${productDisplayName(p)} • รูปที่ ${productHeroIndex+1}/${imgs.length}`;
+  im.src=src;
+  productZoomScale=1;
+  applyProductZoom();
+  ov.classList.add('show');
+  document.body.dataset.zoomOldOverflow=document.body.style.overflow||'';
+  document.body.style.overflow='hidden';
+  setTimeout(()=>{const st=document.getElementById('productZoomStage');if(st){st.scrollTop=0;st.scrollLeft=0}},20);
+}
+function closeProductZoom(){
+  const ov=document.getElementById('productImageZoomOverlay');
+  if(ov)ov.classList.remove('show');
+  document.body.style.overflow=document.body.dataset.zoomOldOverflow||'';
+  delete document.body.dataset.zoomOldOverflow;
+}
+function applyProductZoom(){
+  const im=document.getElementById('productZoomImg'),pct=document.getElementById('productZoomPct');
+  if(!im)return;
+  im.style.width=(productZoomScale*100)+'%';
+  if(pct)pct.textContent=Math.round(productZoomScale*100)+'%';
+}
+function changeProductZoom(delta){
+  productZoomScale=Math.max(.75,Math.min(4,productZoomScale+Number(delta||0)));
+  applyProductZoom();
+}
+function resetProductZoom(){productZoomScale=1;applyProductZoom()}
+function toggleProductZoom(){productZoomScale=productZoomScale>1.05?1:2;applyProductZoom()}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeProductZoom()});
 function changeDetailQty(d){detailQty=Math.max(1,Math.min(99,detailQty+(Number(d)||0)));['detailQty','detailQtyMobile'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=detailQty})}
 function saveStoreCart(){try{localStorage.setItem('storeCart_v1',JSON.stringify(storeCart))}catch(e){}updateCartBadge()}
 function updateCartBadge(){const n=storeCart.reduce((a,x)=>a+Number(x.qty||0),0);document.querySelectorAll('#cartBadge,.cart-badge-sync').forEach(e=>e.textContent=n)}
@@ -1762,7 +1853,8 @@ function removeImageBackgroundCanvas(im){
 let _postShareBlob=null,_postShareFile=null,_postShareObjectUrl='';
 async function createProductPost(id){
   const p=(db.storeProducts||[]).find(x=>Number(x.id)===Number(id));if(!p)return;
-  flash('กำลังสร้างภาพโพสต์…');
+  const cleanPostEligible = p.status==='พร้อมขาย' && (p.itemType==='มือ 1' || p.itemType==='มือ 2');
+  flash(cleanPostEligible?'กำลังสร้างภาพโพสต์แบบไม่มีลายน้ำ…':'กำลังสร้างภาพโพสต์…');
   try{if(document.fonts&&document.fonts.ready)await document.fonts.ready}catch(e){}
   const c=document.createElement('canvas');c.width=1080;c.height=1350;const ctx=c.getContext('2d');
   ctx.fillStyle='#f4f8fd';ctx.fillRect(0,0,c.width,c.height);
@@ -1771,8 +1863,13 @@ async function createProductPost(id){
   ctx.font='500 23px "Bai Jamjuree", sans-serif';ctx.fillStyle='#bcd5f4';ctx.fillText('มือถือสวย • คัดเครื่อง • มีรูปจริงหลายมุม',82,132);
   const sold=p.status==='ขายแล้ว';ctx.fillStyle=sold?'#e9edf2':'#e7f7f1';roundRectPath(ctx,820,73,170,55,27);ctx.fill();ctx.fillStyle=sold?'#45505e':'#08745f';ctx.font='700 24px "Bai Jamjuree", sans-serif';ctx.textAlign='center';ctx.fillText(sold?'ขายแล้ว':'พร้อมขาย',905,108);ctx.textAlign='left';
   ctx.fillStyle='#fff';roundRectPath(ctx,42,190,996,690,28);ctx.fill();ctx.strokeStyle='#dde7f2';ctx.lineWidth=2;ctx.stroke();
-  const cover=storeCover(p);let im=null,cutout=null;try{im=await loadCanvasImage(cover);cutout=removeImageBackgroundCanvas(im)}catch(e){}
-  if(cutout||im)drawContainedImage(ctx,cutout||im,92,225,896,620);else{ctx.fillStyle='#eef3f8';roundRectPath(ctx,92,225,896,620,20);ctx.fill();ctx.font='120px sans-serif';ctx.textAlign='center';ctx.fillStyle='#9cb0c7';ctx.fillText('📱',540,575);ctx.textAlign='left'}
+  // ยกเว้นลายน้ำเฉพาะสินค้าที่ "พร้อมขาย" และเป็น "มือ 1 / มือ 2"
+  // หน้าเว็บและรูปย่อยยังใช้รูปมีลายน้ำตามปกติ
+  const cover = cleanPostEligible
+    ? ((p.originalImages&&p.originalImages[0])||storeCover(p))
+    : storeCover(p);
+  let im=null;try{im=await loadCanvasImage(cover)}catch(e){}
+  if(im)drawContainedImage(ctx,im,92,225,896,620);else{ctx.fillStyle='#eef3f8';roundRectPath(ctx,92,225,896,620,20);ctx.fill();ctx.font='120px sans-serif';ctx.textAlign='center';ctx.fillStyle='#9cb0c7';ctx.fillText('📱',540,575);ctx.textAlign='left'}
   ctx.fillStyle='#fff';roundRectPath(ctx,42,906,996,404,28);ctx.fill();ctx.strokeStyle='#dde7f2';ctx.stroke();
   ctx.fillStyle='#101828';ctx.font='700 48px "Bai Jamjuree", sans-serif';let yy=canvasText(ctx,productDisplayName(p),78,970,620,58,2);
   const spec=[productCapacity(p),p.color,p.itemType].filter(Boolean).join(' | ');if(spec){ctx.fillStyle='#58677b';ctx.font='500 26px "Bai Jamjuree", sans-serif';ctx.fillText(spec,78,yy+5);yy+=42}
@@ -1939,9 +2036,9 @@ function tab(name){
   }
   else if(name==='posts'){
     b.innerHTML=`
-      <label>รูปภาพ (สูงสุด 4 รูป)</label>
+      <label>รูปภาพ (เลือกหลายรูปพร้อมกันได้ • สูงสุด 4 รูป)</label>
       <div class="imgrow" id="postThumbs"></div>
-      <button type="button" class="upbtn" id="postUpBtn" onclick="document.getElementById('postFile').click()">+ เพิ่มรูป</button>
+      <button type="button" class="upbtn" id="postUpBtn" onclick="document.getElementById('postFile').click()">+ เลือกหลายรูป</button>
       <input type="file" id="postFile" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="pickPostImg(this)">
       <label>ข้อความโพสต์ (แคปชั่น)</label>
       <textarea id="p-caption" rows="4" placeholder="เล่าเรื่องร้าน งานที่ทำ ไลฟ์สไตล์ หรือสินค้าที่อยากโชว์..."></textarea>
@@ -2033,7 +2130,7 @@ function tab(name){
 }
 
 /* ---------- admin: showroom ---------- */
-let storeDraftImgs=[], editingStoreProductId=null;
+let storeDraftImgs=[], storeDraftOriginalImgs=[], editingStoreProductId=null;
 function storeProductDraft(){ return editingStoreProductId?(db.storeProducts||[]).find(x=>Number(x.id)===Number(editingStoreProductId)):null; }
 function renderStoreAdminTab(){
   const b=document.getElementById('tabbody'); if(!b) return;
@@ -2046,9 +2143,10 @@ function renderStoreAdminTab(){
   b.innerHTML=`
     <div class="store-formbox">
       <div class="store-form-title">${p?'แก้ไขสินค้า':'เพิ่มสินค้าใหม่'}</div>
-      <label>รูปสินค้า <span style="font-weight:400;color:#667085">(รูปแรกจะเป็นรูปปก • สูงสุด 8 รูป)</span></label>
+      <label>รูปสินค้า <span style="font-weight:400;color:#667085">(เลือกหลายรูปพร้อมกันได้ • รูปแรกที่เลือก = รูปปก • สูงสุด 8 รูป)</span></label>
+      <div style="background:#f5f9ff;border:1px solid #dce9f8;border-radius:9px;padding:8px 10px;margin:0 0 8px;color:#41617f;font-size:.69rem">ระบบจะใส่ลายน้ำ <b>mn only shop</b> สีขาวจาง ๆ ให้รูปที่แสดงบนเว็บอัตโนมัติ ส่วนรูปต้นฉบับสะอาดจะใช้เฉพาะตอนสร้างภาพโพสต์ของสินค้า <b>พร้อมขาย • มือ 1 / มือ 2</b> เท่านั้น</div>
       <div class="imgrow" id="storeThumbs"></div>
-      <button type="button" class="upbtn store-upload" id="storeUpBtn" onclick="document.getElementById('storeFile').click()"><strong>＋</strong><span>เพิ่มรูป</span></button>
+      <button type="button" class="upbtn store-upload" id="storeUpBtn" onclick="document.getElementById('storeFile').click()"><strong>＋</strong><span>เลือกหลายรูป</span></button>
       <input type="file" id="storeFile" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="pickStoreImgs(this)">
       <div class="store-form-grid">
         <div><label>ประเภทเครื่อง *</label><select id="sp-itemType"><option value="มือ 1" ${p&&p.itemType==='มือ 1'?'selected':''}>มือ 1</option><option value="มือ 2" ${!p||p.itemType!=='มือ 1'?'selected':''}>มือ 2</option></select></div>
@@ -2083,33 +2181,40 @@ function renderStoreAdminTab(){
 }
 function editStoreProduct(id){
   const p=(db.storeProducts||[]).find(x=>Number(x.id)===Number(id)); if(!p)return;
-  editingStoreProductId=Number(id); storeDraftImgs=[...(p.images||[])];
+  editingStoreProductId=Number(id); storeDraftImgs=[...(p.images||[])]; storeDraftOriginalImgs=[...(p.originalImages||p.images||[])];
   if(!isAdmin){ adminPanel(); } else { if(!document.getElementById('tabbody')) adminPanel(); else tab('store'); }
   setTimeout(()=>{const sh=document.querySelector('.sheet'); if(sh) sh.scrollTop=0;},30);
 }
-function cancelStoreEdit(){ editingStoreProductId=null; storeDraftImgs=[]; tab('store'); }
+function cancelStoreEdit(){ editingStoreProductId=null; storeDraftImgs=[]; storeDraftOriginalImgs=[]; tab('store'); }
 async function hideStoreProduct(id){
   const p=(db.storeProducts||[]).find(x=>Number(x.id)===Number(id)); if(!p)return;
   if(!confirm('ซ่อนสินค้านี้จากหน้าร้าน? ข้อมูลจะยังอยู่และสามารถแก้ไขกลับเป็นพร้อมขายได้')) return;
   p.status='ซ่อน'; await save(); renderStore(); tab('store'); flash('ซ่อนสินค้าแล้ว ✓');
 }
 async function pickStoreImgs(input){
-  const files=[...input.files]; if(!files.length)return;
+  const files=Array.from(input.files||[]); if(!files.length)return;
   let added=0,failed=0;
+  // ประมวลผลตามลำดับที่ FileList ส่งมาจากอัลบั้ม รูปแรก = ลำดับ 1 / รูปปก
   for(const f of files){
     if(storeDraftImgs.length>=8){flash('ใส่รูปได้สูงสุด 8 รูป');break}
-    try{storeDraftImgs.push(await resizeImg(f,1200,0.84,false));added++;}catch(e){failed++;console.warn(e)}
+    try{
+      const clean=await resizeImg(f,1200,0.90,false);
+      const marked=await resizeImg(f,1200,0.88,true);
+      storeDraftOriginalImgs.push(clean);
+      storeDraftImgs.push(marked);
+      added++;
+    }catch(e){failed++;console.warn(e)}
   }
   input.value='';renderStoreThumbs();
-  if(failed) flash('อ่านรูปบางไฟล์ไม่ได้ — แนะนำ JPG / PNG'); else if(added) flash('เพิ่มรูป '+added+' รูป ✓');
+  if(failed) flash('อ่านรูปบางไฟล์ไม่ได้ — แนะนำ JPG / PNG'); else if(added) flash('เพิ่ม '+added+' รูปตามลำดับที่เลือก ✓');
 }
 function renderStoreThumbs(){
   const box=document.getElementById('storeThumbs');if(!box)return;
   box.innerHTML=storeDraftImgs.map((src,i)=>`<div class="sp-thumb"><img src="${src}">${i===0?'<span class="sp-cover">รูปปก</span>':''}<span class="sp-index">${i+1}</span><div class="sp-tools"><button class="mini" onclick="moveStoreImg(${i},-1)" ${i===0?'disabled':''}>←</button><button class="mini" onclick="moveStoreImg(${i},1)" ${i===storeDraftImgs.length-1?'disabled':''}>→</button><button class="mini del" onclick="rmStoreImg(${i})">✕</button></div></div>`).join('');
   const up=document.getElementById('storeUpBtn');if(up)up.style.display=storeDraftImgs.length>=8?'none':'inline-block';
 }
-function moveStoreImg(i,d){const j=i+d;if(j<0||j>=storeDraftImgs.length)return;[storeDraftImgs[i],storeDraftImgs[j]]=[storeDraftImgs[j],storeDraftImgs[i]];renderStoreThumbs()}
-function rmStoreImg(i){storeDraftImgs.splice(i,1);renderStoreThumbs()}
+function moveStoreImg(i,d){const j=i+d;if(j<0||j>=storeDraftImgs.length)return;[storeDraftImgs[i],storeDraftImgs[j]]=[storeDraftImgs[j],storeDraftImgs[i]];[storeDraftOriginalImgs[i],storeDraftOriginalImgs[j]]=[storeDraftOriginalImgs[j],storeDraftOriginalImgs[i]];renderStoreThumbs()}
+function rmStoreImg(i){storeDraftImgs.splice(i,1);storeDraftOriginalImgs.splice(i,1);renderStoreThumbs()}
 async function saveStoreProduct(){
   const brand=document.getElementById('sp-brand').value.trim();
   const model=document.getElementById('sp-model').value.trim();
@@ -2127,13 +2232,13 @@ async function saveStoreProduct(){
     status:document.getElementById('sp-status').value,condition:document.getElementById('sp-condition').value.trim(),
     warranty:document.getElementById('sp-warranty').value.trim(),accessories:document.getElementById('sp-accessories').value.trim(),
     flaws:document.getElementById('sp-flaws').value.trim(),note:document.getElementById('sp-note').value.trim(),
-    featured:document.getElementById('sp-featured').checked,images:[...storeDraftImgs]
+    featured:document.getElementById('sp-featured').checked,images:[...storeDraftImgs],originalImages:[...storeDraftOriginalImgs]
   };
   const btn=document.querySelector('#tabbody .store-formbox .btn'); if(btn){btn.disabled=true;btn.textContent='กำลังบันทึก...'}
   if(editingStoreProductId){
     const p=db.storeProducts.find(x=>Number(x.id)===Number(editingStoreProductId)); if(p) Object.assign(p,data,{updatedAt:Date.now()});
   }else db.storeProducts.push({id:Date.now(),createdAt:Date.now(),...data});
-  await save(); editingStoreProductId=null;storeDraftImgs=[];renderStore();tab('store');flash('บันทึกสินค้าแล้ว ✓');
+  await save(); editingStoreProductId=null;storeDraftImgs=[];storeDraftOriginalImgs=[];renderStore();tab('store');flash('บันทึกสินค้าแล้ว ✓');
 }
 
 /* ---------- รูปภาพ: ย่อขนาดก่อนเก็บ ---------- */
@@ -2198,8 +2303,8 @@ function editProduct(id){
 }
 function delProduct(id){if(confirm('ลบรายการนี้?')){db.products=db.products.filter(x=>x.id!==id);save();renderList()}}
 /* ---------- posts ---------- */
-let postDraftImgs=[], editingPostId=null;
-const WATERMARK_TEXT='ใบมิ้นท์ อะไหล่ งานช่าง';
+let postDraftImgs=[], postDraftOriginalImgs=[], editingPostId=null;
+const WATERMARK_TEXT='mn only shop';
 function drawWatermark(ctx,w,h){
   const fs=Math.max(16,Math.round(w*0.055));
   ctx.save();
@@ -2208,11 +2313,8 @@ function drawWatermark(ctx,w,h){
   ctx.font='600 '+fs+'px "Bai Jamjuree","Noto Sans Thai",sans-serif';
   ctx.textAlign='center';
   ctx.textBaseline='middle';
-  // เงาดำจางช่วยให้อ่านออกบนพื้นสว่าง
-  ctx.fillStyle='rgba(0,0,0,0.10)';
-  ctx.fillText(WATERMARK_TEXT,2,2);
-  // ตัวอักษรขาวจางๆ
-  ctx.fillStyle='rgba(255,255,255,0.32)';
+  // ลายน้ำสีขาวจาง ๆ ตามที่กำหนด
+  ctx.fillStyle='rgba(255,255,255,0.30)';
   ctx.fillText(WATERMARK_TEXT,0,0);
   ctx.restore();
 }
@@ -2236,16 +2338,19 @@ function resizeImg(file,maxW,q,watermark){
   });
 }
 async function pickPostImg(input){
-  const files=[...input.files]; if(!files.length) return;
+  const files=Array.from(input.files||[]); if(!files.length) return;
   let added=0, failed=0;
   for(const f of files){
     if(postDraftImgs.length>=4){ flash('ใส่ได้สูงสุด 4 รูป'); break; }
-    try{ postDraftImgs.push(await resizeImg(f,1000,0.78,true)); added++; }
-    catch(e){ console.warn('resize failed:',f.name,e); failed++; }
+    try{
+      postDraftOriginalImgs.push(await resizeImg(f,1000,0.88,false));
+      postDraftImgs.push(await resizeImg(f,1000,0.82,true));
+      added++;
+    }catch(e){ console.warn('resize failed:',f.name,e); failed++; }
   }
   input.value=''; renderPostThumbs();
   if(failed){ flash('อ่านรูปบางไฟล์ไม่ได้ ('+failed+') — ลองใช้ไฟล์ .jpg หรือ .png (ไฟล์ .HEIC จาก iPhone ไม่รองรับ)'); }
-  else if(added){ flash('เพิ่มรูปแล้ว '+added+' รูป ✓'); }
+  else if(added){ flash('เพิ่มรูปแล้ว '+added+' รูปตามลำดับที่เลือก ✓'); }
 }
 function renderPostThumbs(){
   const box=document.getElementById('postThumbs'); if(!box) return;
@@ -2257,14 +2362,14 @@ function renderPostThumbs(){
   const up=document.getElementById('postUpBtn');
   if(up) up.style.display = postDraftImgs.length>=4 ? 'none':'inline-block';
 }
-function rmPostImg(i){ postDraftImgs.splice(i,1); renderPostThumbs(); }
+function rmPostImg(i){ postDraftImgs.splice(i,1); postDraftOriginalImgs.splice(i,1); renderPostThumbs(); }
 function openComposer(){
   sheet.innerHTML=`
     <h2 class="ui">${editingPostId?'แก้ไขโพสต์':'สร้างโพสต์'}</h2>
     <p class="desc">โพสต์รูป + แคปชั่น (ต้องมีรูปอย่างน้อย 1 รูป)</p>
-    <label>รูปภาพ (สูงสุด 4 รูป)</label>
+    <label>รูปภาพ (เลือกหลายรูปพร้อมกันได้ • สูงสุด 4 รูป)</label>
     <div class="imgrow" id="postThumbs"></div>
-    <button type="button" class="upbtn" id="postUpBtn" onclick="document.getElementById('postFile').click()">+ เพิ่มรูป</button>
+    <button type="button" class="upbtn" id="postUpBtn" onclick="document.getElementById('postFile').click()">+ เลือกหลายรูป</button>
     <input type="file" id="postFile" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="pickPostImg(this)">
     <label>ข้อความโพสต์ (แคปชั่น)</label>
     <textarea id="p-caption" rows="4" placeholder="เล่าเรื่องร้าน งานที่ทำ ไลฟ์สไตล์ หรือสินค้าที่อยากโชว์..."></textarea>
@@ -2292,7 +2397,7 @@ function tsToInput(ts){
   const d=new Date(ts), pad=n=>String(n).padStart(2,'0');
   return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
 }
-function cancelComposer(){ postDraftImgs=[]; editingPostId=null; closeSheet(); }
+function cancelComposer(){ postDraftImgs=[]; postDraftOriginalImgs=[]; editingPostId=null; closeSheet(); }
 function addPost(){
   const cap=document.getElementById('p-caption');
   const caption=cap?cap.value.trim():'';
@@ -2301,7 +2406,7 @@ function addPost(){
   if(!postDraftImgs.length){alert('โพสต์ต้องมีรูปอย่างน้อย 1 รูปนะ');return}
   const dEl=document.getElementById('p-date');
   const customTs = dEl && dEl.value ? new Date(dEl.value).getTime() : null;
-  const data={images:[...postDraftImgs],caption,price:price!==''?Number(price):null,price2:price2!==''?Number(price2):null};
+  const data={images:[...postDraftImgs],originalImages:[...postDraftOriginalImgs],caption,price:price!==''?Number(price):null,price2:price2!==''?Number(price2):null};
   try{
     if(editingPostId){
       const p=db.posts.find(x=>x.id===editingPostId);
@@ -2315,13 +2420,13 @@ function addPost(){
     alert('พื้นที่เก็บข้อมูลในเครื่องเต็ม (รูปเยอะเกินไป) ลองลดจำนวนรูป หรือรอเราต่อ Firebase จะเก็บรูปได้ไม่จำกัด');
     return;
   }
-  postDraftImgs=[]; editingPostId=null; renderFeed();
+  postDraftImgs=[]; postDraftOriginalImgs=[]; editingPostId=null; renderFeed();
   if(document.getElementById('t0')) tab('posts'); else closeSheet();
   flash('ลงโพสต์แล้ว ✓');
 }
 function editPost(id){
   const p=db.posts.find(x=>x.id===id);if(!p)return;
-  editingPostId=id; postDraftImgs=[...(p.images||[])];
+  editingPostId=id; postDraftImgs=[...(p.images||[])]; postDraftOriginalImgs=[...(p.originalImages||p.images||[])];
   openComposer();
 }
 function delPost(id){if(confirm('ลบโพสต์นี้?')){db.posts=db.posts.filter(x=>x.id!==id);save();renderFeed();if(isAdmin&&document.getElementById('t0'))tab('posts');}}
