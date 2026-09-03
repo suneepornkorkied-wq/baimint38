@@ -366,6 +366,8 @@
   .store-services{margin-top:22px;background:#eef5fc;border-top:1px solid #dce8f5;border-bottom:1px solid #dce8f5;display:grid;grid-template-columns:repeat(3,1fr);border-radius:10px;overflow:hidden}
   .store-service{padding:13px 10px;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'Bai Jamjuree';font-size:.75rem;color:#172b4d;border-right:1px solid #d6e2ef}
   .store-service:last-child{border-right:0}.store-service b{display:block;font-size:.77rem}.store-service span{font-size:1.25rem}
+  .store-footer-cover{margin-top:22px;width:100%;border:1px solid #dce8f5;border-radius:12px;overflow:hidden;background:#eef5fc;box-shadow:0 5px 18px rgba(15,40,75,.05)}
+  .store-footer-cover img{display:block;width:100%;height:auto;aspect-ratio:820/312;object-fit:cover;object-position:center}
 
   /* Premium product detail — mobile commerce + social posting */
   .detail-shell{max-width:1120px;padding:14px 16px 96px}
@@ -462,6 +464,8 @@
     .store-toolbar{align-items:flex-end}.store-toolbar h2{font-size:1.08rem}.store-sort{display:none}.store-count{font-size:.62rem}.store-cart-btn{padding:7px 9px;font-size:.72rem}
     .store-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.store-imgwrap{margin:7px 7px 0}.store-name{font-size:.8rem}.store-spec{font-size:.64rem}.store-price{font-size:.93rem}.store-detailbtn{font-size:.7rem;padding:7px 5px}
     .store-services{grid-template-columns:1fr}.store-service{border-right:0;border-bottom:1px solid #d6e2ef;justify-content:flex-start;padding-left:20px}.store-service:last-child{border-bottom:0}
+    .store-footer-cover{margin-top:18px;border-radius:11px}
+    .store-footer-cover img{aspect-ratio:820/312;object-fit:cover}
     .detail-shell{padding:8px 10px 24px}.detail-layout{grid-template-columns:1fr}.gallery{border-right:0;border-bottom:1px solid #e3e8ef;padding:12px}.detail-info{padding:17px}.gallery-thumbs button{flex-basis:56px;width:56px;height:56px}.detail-name{font-size:1.3rem}.detail-price{font-size:1.35rem}.detail-row{grid-template-columns:112px 1fr;font-size:.78rem}.related{padding:11px}.related .store-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
     .detail-shell{padding:8px 10px 92px}.detail-topline{position:sticky;top:0;z-index:20;background:#f5f7fb;padding:3px 0 5px}.detail-topactions .detail-iconbtn{padding:0 9px;height:35px}.detail-topactions .detail-iconbtn span{display:none}.detail-card{border-radius:14px}.detail-layout{grid-template-columns:1fr}.gallery{border-right:0;border-bottom:1px solid #e3e8ef;padding:12px}.gallery-main{border-radius:13px}.gallery-main img{padding:10px}.gallery-thumbs button{flex-basis:58px;width:58px;height:58px}.gallery-tip{display:none}.detail-info{padding:16px}.detail-name{font-size:1.38rem}.detail-price{font-size:1.55rem;margin-top:11px}.detail-facts{gap:7px}.detail-fact{padding:9px;min-height:58px}.detail-row{grid-template-columns:105px 1fr;font-size:.76rem}.detail-actions{grid-template-columns:1fr 1fr}.detail-actions .cart{display:none}.detail-postbox{margin-top:10px}.detail-posttools{grid-template-columns:1fr 1fr}.related{padding:11px;border-radius:13px}.related .store-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.detail-mobilebar{display:grid;grid-template-columns:auto 1fr 1fr;gap:7px;align-items:center;position:fixed;left:0;right:0;bottom:0;z-index:85;background:rgba(255,255,255,.96);border-top:1px solid #dfe6ee;padding:8px 10px max(8px,env(safe-area-inset-bottom));box-shadow:0 -10px 30px rgba(15,40,75,.1);backdrop-filter:blur(9px)}.detail-mobileprice{padding-right:4px}.detail-mobileprice small{display:block;color:#7a8798;font-size:.56rem}.detail-mobileprice b{font-family:'Bai Jamjuree';font-size:.9rem;color:#075dbd;white-space:nowrap}.detail-mobilebar button,.detail-mobilebar a{border-radius:9px;padding:11px 7px;border:1px solid #0a65c8;font-family:'Bai Jamjuree';font-weight:700;text-align:center;text-decoration:none;font-size:.72rem}.detail-mobilebar .mcart{background:#0a65c8;color:#fff}.detail-mobilebar .mbuy{background:#fff;color:#075dbd}.detail-mobilebar .disabled{background:#e5e8ed!important;color:#8a94a2!important;border-color:#e5e8ed!important;pointer-events:none}
     .overlay.adminmode .sheet{padding:0 12px 28px}.admin-topbar{margin:0 -12px 14px;padding:13px 14px}.store-form-grid{grid-template-columns:1fr}.store-form-grid .full{grid-column:auto}.store-save-row{display:grid;grid-template-columns:1fr 1.5fr}.store-save-row .btn{min-width:0;width:100%}
@@ -480,7 +484,7 @@
   @media(max-width:590px){
     body[data-view="product"],body[data-view="product"] *{font-family:'Bai Jamjuree','Noto Sans Thai',sans-serif}
     body[data-view="product"]{background:#f5f7fb}
-    body[data-view="product"] #appHeader{height:62px;padding:0 14px 0 58px;display:flex;align-items:center;justify-content:space-between;border-radius:0;box-shadow:0 2px 10px rgba(5,25,62,.18)}
+    body[data-view="product"] #appHeader{height:62px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;border-radius:0;box-shadow:0 2px 10px rgba(5,25,62,.18)}
     body[data-view="product"] #appHeader .brand-wrap{gap:7px;min-width:0;flex:1}
     body[data-view="product"] #appHeader .brand{font-size:1.02rem;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     body[data-view="product"] #appHeader .brand small{font-size:.56rem;margin-top:3px;color:#ffd64b}
@@ -556,7 +560,7 @@
     body[data-view="product"],body[data-view="product"] *{font-family:'Bai Jamjuree','Noto Sans Thai',sans-serif!important}
     body[data-view="product"]{background:#fff;color:#071933;padding-bottom:0}
     body[data-view="product"] #appHeader{
-      height:58px!important;min-height:58px;padding:0 12px 0 57px!important;
+      height:58px!important;min-height:58px;padding:0 12px!important;
       background:#06234f!important;box-shadow:none!important;border-bottom:1px solid #d9e1ea!important;
       position:relative!important;top:auto!important;overflow:visible!important
     }
@@ -656,7 +660,6 @@
 <body>
 
 <header id="appHeader">
-  <button class="product-mobile-menu" aria-label="กลับหน้าสินค้า" onclick="openStore()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
   <div class="brand-wrap">
     <img class="logo" id="shopLogo" alt="">
     <div class="brand"><span id="shopName">ใบมิ้นท์ งานช่าง</span>
@@ -709,11 +712,7 @@
     </div>
     <div class="store-chips" id="storeChips"></div>
     <div class="store-grid" id="storeGrid"></div>
-    <div class="store-services">
-      <div class="store-service"><span>🛡️</span><div><b>รับประกันร้าน</b>ตรวจสอบก่อนส่ง</div></div>
-      <div class="store-service"><span>✓</span><div><b>คัดทุกเครื่อง</b>แจ้งสภาพและตำหนิชัดเจน</div></div>
-      <div class="store-service"><span>🚚</span><div><b>จัดส่งไว</b>แพ็กสินค้าแน่นหนา</div></div>
-    </div>
+    <div id="storeFooterArea"></div>
   </div>
 </div>
 
@@ -1450,9 +1449,21 @@ function storeCardHtml(p,compact=false){
     </div>
   </div>`;
 }
+function renderStoreFooter(){
+  const area=document.getElementById('storeFooterArea'); if(!area) return;
+  if(db.shop.detailFooterCover){
+    area.innerHTML=`<div class="store-footer-cover"><img src="${db.shop.detailFooterCover}" alt="ข้อมูลบริการของร้าน"></div>`;
+  }else{
+    area.innerHTML=`<div class="store-services">
+      <div class="store-service"><span>🛡️</span><div><b>รับประกันร้าน</b>ตรวจสอบก่อนส่ง</div></div>
+      <div class="store-service"><span>✓</span><div><b>คัดทุกเครื่อง</b>แจ้งสภาพและตำหนิชัดเจน</div></div>
+      <div class="store-service"><span>🚚</span><div><b>จัดส่งไว</b>แพ็กสินค้าแน่นหนา</div></div>
+    </div>`;
+  }
+}
 function renderStore(){
   const grid=document.getElementById('storeGrid'); if(!grid) return;
-  renderStoreHero(); renderStoreChips(); updateCartBadge();
+  renderStoreHero(); renderStoreChips(); renderStoreFooter(); updateCartBadge();
   const inp=document.getElementById('storeSearch'); if(inp&&inp.value!==storeQuery) inp.value=storeQuery;
   const sorter=document.getElementById('storeSort');if(sorter)sorter.value=storeSort;
   const q=(storeQuery||'').trim().toLowerCase();
@@ -1894,8 +1905,8 @@ function tab(name){
         <input type="file" id="storeCoverFile" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="pickImg(this,'storeCover')">
         ${s.storeCover?`<button class="mini del" onclick="clearImg('storeCover')">ลบปก</button>`:''}
       </div>
-      <label>ภาพส่วนท้ายหน้ารายละเอียดสินค้า <span style="color:#0a65c8">(ขนาด Facebook Cover)</span></label>
-      <p class="desc" style="margin:2px 0 8px">ใช้แทนแถบ "รับประกัน / แท้ทุกเครื่อง / จัดส่งไว / บริการหลังการขาย" ตอนท้ายหน้าสินค้า ระบบจะจัดเป็นอัตราส่วน 820 × 312 px อัตโนมัติ</p>
+      <label>ภาพส่วนท้ายหน้าแรก + หน้ารายละเอียดสินค้า <span style="color:#0a65c8">(ขนาด Facebook Cover)</span></label>
+      <p class="desc" style="margin:2px 0 8px">ใช้เป็นภาพส่วนท้ายเดียวกันทั้งหน้าแรกสินค้าทั้งหมด และหน้ารายละเอียดสินค้า ระบบจะจัดเป็นอัตราส่วน Facebook Cover 820 × 312 px อัตโนมัติ</p>
       <div class="imgrow">
         <img class="thumb wide" id="detailFooterCoverPrev" src="${s.detailFooterCover||''}" style="width:min(100%,820px);height:auto;aspect-ratio:820/312;object-fit:cover;${s.detailFooterCover?'':'display:none'}">
         <button type="button" class="upbtn" onclick="document.getElementById('detailFooterCoverFile').click()">อัปโหลดภาพส่วนท้าย</button>
@@ -2263,3 +2274,5 @@ initCloud();
 </script>
 </body>
 </html>
+
+<style>.product-mobile-menu{display:none!important}</style>
