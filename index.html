@@ -1263,12 +1263,33 @@ async function captureFeedPost(id,btn){
     // ภาพสำหรับนำไปโพสต์ใหม่ให้ดูสะอาด: ไม่ติดปุ่มแชร์/ทักร้านในภาพ
     clone.querySelectorAll('.fb-actions').forEach(el=>el.remove());
     clone.querySelectorAll('[onclick]').forEach(el=>el.removeAttribute('onclick'));
+
+    // html2canvas บนมือถือบางรุ่นแคปพื้นหลังกล่องราคาได้ แต่ทำตัวอักษรใน inline-flex หาย
+    // จึงสร้างกล่องราคาใหม่แบบ block ด้วย inline style เพื่อให้ข้อความติดในภาพ 100%
+    const oldPrice=clone.querySelector('.fb-price');
+    if(oldPrice && p.price){
+      const safePrice=document.createElement('div');
+      safePrice.setAttribute('data-capture-price','true');
+      safePrice.style.cssText='display:block;width:max-content;max-width:calc(100% - 28px);margin:0 14px 10px;padding:8px 12px 9px;border-radius:9px;background:#e7f3ff;line-height:1.2;box-sizing:border-box;';
+      const label=document.createElement('div');
+      label.textContent='ราคาโดยประมาณ • สามารถต่อรองได้';
+      label.style.cssText='display:block;color:#526b86;font-family:Arial,"Noto Sans Thai",sans-serif;font-size:13px;font-weight:600;line-height:1.25;margin:0 0 3px;';
+      const value=document.createElement('div');
+      value.textContent=priceText(p);
+      value.style.cssText='display:block;color:#1877f2;font-family:Arial,"Noto Sans Thai",sans-serif;font-size:24px;font-weight:700;line-height:1.15;margin:0;';
+      safePrice.appendChild(label);safePrice.appendChild(value);
+      oldPrice.replaceWith(safePrice);
+    }
+
     stage.appendChild(clone);
     document.body.appendChild(stage);
 
     const cloneImgs=[...clone.querySelectorAll('img')];
     cloneImgs.forEach(img=>{img.crossOrigin='anonymous'});
     await Promise.all(cloneImgs.map(img=>img.complete?Promise.resolve():new Promise(res=>{img.addEventListener('load',res,{once:true});img.addEventListener('error',res,{once:true});setTimeout(res,3500)})));
+
+    if(document.fonts&&document.fonts.ready){try{await document.fonts.ready}catch(e){}}
+    await new Promise(res=>requestAnimationFrame(()=>requestAnimationFrame(res)));
 
     const canvas=await html2canvas(clone,{
       backgroundColor:'#ffffff',
