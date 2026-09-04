@@ -453,15 +453,8 @@
   .store-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}.store-form-grid .full{grid-column:1/-1}
   .store-formbox label{font-size:.76rem;color:#1f2937;margin-top:10px}.store-formbox input,.store-formbox select,.store-formbox textarea{border-radius:7px;border:1px solid #d7dee8;padding:9px 11px;font-size:.83rem}
   .store-formbox .imgrow{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
-  .sp-thumb{width:76px}.sp-thumb img{width:76px;height:66px;border-radius:7px;object-fit:contain;background:#fff}.sp-cover{font-size:.53rem;background:#0b64c6}.sp-index{position:absolute;left:5px;top:5px;background:#fff;color:#0f2441;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.66rem;font-weight:800;box-shadow:0 2px 7px rgba(0,0,0,.22);z-index:3}
-  .sp-cover{position:absolute;right:5px;top:5px;left:auto!important;background:#0b6b61;color:#fff;border-radius:999px;padding:3px 7px;font-size:.58rem;font-family:'Bai Jamjuree';font-weight:700;z-index:3;box-shadow:0 2px 6px rgba(0,0,0,.15)}
-  .sp-cover+.sp-index{left:5px;right:auto}
-  .sp-tools{gap:3px;display:grid!important;grid-template-columns:repeat(3,1fr);margin-top:4px}
-  .sp-tools button{font-size:.6rem;padding:4px 2px;min-width:0}
-  .sp-setcover{grid-column:1/-1!important;background:#eef6ff!important;color:#075dbd!important;border:1px solid #b9d6f7!important;font-family:'Bai Jamjuree'!important;font-weight:700!important}
-  .sp-thumb.is-cover img{outline:2px solid #0b6b61;outline-offset:1px}
-  .sp-thumb.is-cover .sp-index{background:#0b6b61;color:#fff}
-  .store-img-count{font-family:'Bai Jamjuree';font-size:.68rem;color:#52657a;margin:6px 0 2px}
+  .sp-thumb{width:76px}.sp-thumb img{width:76px;height:66px;border-radius:7px;object-fit:contain;background:#fff}.sp-cover{font-size:.53rem;background:#0b64c6}.sp-index{position:absolute;left:4px;top:4px;background:#fff;color:#0f2441;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.2)}.sp-cover+.sp-index{left:auto;right:4px}
+  .sp-tools{gap:2px}.sp-tools button{font-size:.58rem;padding:3px}
   .upbtn.store-upload{width:76px;height:66px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:7px;background:#f9fbff;border-color:#9fc2ed;font-size:.67rem;padding:4px}.upbtn.store-upload strong{font-size:1.35rem;line-height:1}
   .status-pills{display:flex;gap:12px;flex-wrap:wrap;padding-top:3px}.status-pill{display:flex!important;align-items:center;gap:6px!important;font-size:.78rem!important;font-weight:500!important;margin:0!important;cursor:pointer}.status-pill input{width:auto;margin:0}.featured-line{display:flex;justify-content:space-between;align-items:center;padding:10px 0}.switch{position:relative;width:42px;height:24px;display:inline-block}.switch input{opacity:0;width:0;height:0}.switch-slider{position:absolute;inset:0;border-radius:999px;background:#cfd7e3;transition:.2s}.switch-slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:.2s}.switch input:checked+.switch-slider{background:#0a65c8}.switch input:checked+.switch-slider:before{transform:translateX(18px)}
   .store-save-row{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}.store-save-row .btn{width:auto;min-width:145px;margin:0;border-radius:7px;padding:10px 18px}.store-save-row .ghost{min-width:90px}
@@ -2214,13 +2207,11 @@ function renderStoreAdminTab(){
   b.innerHTML=`
     <div class="store-formbox">
       <div class="store-form-title">${p?'แก้ไขสินค้า':'เพิ่มสินค้าใหม่'}</div>
-      <label>รูปสินค้า <span style="font-weight:400;color:#667085">(กดครั้งเดียวแล้วติ๊กหลายรูปในอัลบั้มได้ • รูปที่ 1 = รูปปก • สูงสุด 8 รูป)</span></label>
+      <label>รูปสินค้า <span style="font-weight:400;color:#667085">(เปิดอัลบั้ม 1 ครั้ง แล้วเลือกหลายรูปพร้อมกันได้ • รูปแรกที่เลือก = รูปปก • สูงสุด 10 รูป)</span></label>
       <div style="background:#f5f9ff;border:1px solid #dce9f8;border-radius:9px;padding:8px 10px;margin:0 0 8px;color:#41617f;font-size:.69rem">ระบบจะใส่ลายน้ำ <b>mn only shop</b> สีขาวจาง ๆ ให้รูปที่แสดงบนเว็บอัตโนมัติ ส่วนรูปต้นฉบับสะอาดจะใช้เฉพาะตอนสร้างภาพโพสต์ของสินค้า <b>พร้อมขาย • มือ 1 / มือ 2</b> เท่านั้น</div>
       <div class="imgrow" id="storeThumbs"></div>
-      <label class="upbtn store-upload" id="storeUpBtn" for="storeFile" role="button" tabindex="0"><strong>＋</strong><span>เลือกหลายรูปจากอัลบั้ม</span></label>
-      <input type="file" id="storeFile" name="storeImages[]" accept="image/*" multiple
-        style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0,0,0,0)"
-        onclick="this.value=null" onchange="pickStoreImgs(this)">
+      <label class="upbtn store-upload" id="storeUpBtn" for="storeFile" role="button"><strong>＋</strong><span>เลือกหลายรูปพร้อมกัน</span></label>
+      <input type="file" id="storeFile" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0,0,0,0)" onchange="pickStoreImgs(this)">
       <div class="store-form-grid">
         <div><label>ประเภทเครื่อง *</label><select id="sp-itemType"><option value="มือ 1" ${p&&p.itemType==='มือ 1'?'selected':''}>มือ 1</option><option value="มือ 2" ${!p||p.itemType!=='มือ 1'?'selected':''}>มือ 2</option></select></div>
         <div><label>ยี่ห้อ *</label><input id="sp-brand" list="spBrandList" placeholder="เช่น Samsung" value="${p?esc(p.brand||''):''}"><datalist id="spBrandList">${brands.map(v=>`<option value="${esc(v)}">`).join('')}</datalist></div>
@@ -2282,98 +2273,59 @@ async function hideStoreProduct(id){
   if(!confirm('ซ่อนสินค้านี้จากหน้าร้าน? ข้อมูลจะยังอยู่และสามารถแก้ไขกลับเป็นพร้อมขายได้')) return;
   p.status='ซ่อน'; await save(); renderStore(); tab('store'); flash('ซ่อนสินค้าแล้ว ✓');
 }
-function openStoreMultiPicker(){
-  const input=document.getElementById('storeFile');
-  if(!input)return;
-  if(storeDraftImgs.length>=8){flash('ใส่รูปได้สูงสุด 8 รูป');return;}
-  // ล้างค่าเดิมก่อนเปิด เพื่อให้เลือกรูปชุดเดิมซ้ำได้ และยืนยันว่าเป็นโหมดเลือกหลายรูป
-  input.value='';
-  input.multiple=true;
-  input.click();
-}
 async function pickStoreImgs(input){
-  const selected=Array.from(input.files||[]);
-  if(!selected.length)return;
+  // รับไฟล์ทั้งหมดจากการเลือกครั้งเดียวในอัลบั้มมือถือ
+  const files = Array.from(input.files || []);
+  if(!files.length) return;
 
-  const slots=Math.max(0,8-storeDraftImgs.length);
-  if(!slots){input.value='';flash('ใส่รูปได้สูงสุด 8 รูป');return;}
+  const MAX_STORE_IMAGES = 10;
+  const remaining = MAX_STORE_IMAGES - storeDraftImgs.length;
 
-  const picked=selected.slice(0,slots);
-  const skipped=Math.max(0,selected.length-picked.length);
-  const newMarked=[],newOriginal=[];
-  let failed=0;
-
-  flash('กำลังเพิ่ม '+picked.length+' รูป...');
-  for(let i=0;i<picked.length;i++){
-    const f=picked[i];
-    try{
-      const clean=await resizeImg(f,1200,0.90,false);
-      const marked=await resizeImg(f,1200,0.88,true);
-      newOriginal.push(clean);
-      newMarked.push(marked);
-      if(picked.length>1) flash('กำลังเพิ่มรูป '+(i+1)+' / '+picked.length+'...');
-    }catch(e){
-      failed++;
-      console.warn('store image failed:',f.name,e);
-    }
+  if(remaining <= 0){
+    input.value = '';
+    flash('ใส่รูปได้สูงสุด 10 รูป');
+    return;
   }
 
-  if(newMarked.length){
-    storeDraftImgs=[...newMarked,...storeDraftImgs].slice(0,8);
-    storeDraftOriginalImgs=[...newOriginal,...storeDraftOriginalImgs].slice(0,8);
-  }
+  const selectedFiles = files.slice(0, remaining);
+  flash('กำลังเพิ่ม ' + selectedFiles.length + ' รูป...');
 
-  input.value='';
+  // ประมวลผลทุกรูปที่เลือกมาในครั้งเดียว
+  const results = await Promise.all(
+    selectedFiles.map(async (file) => {
+      try{
+        const clean = await resizeImg(file,1200,0.90,false);
+        const marked = await resizeImg(file,1200,0.88,true);
+        return {clean, marked};
+      }catch(e){
+        console.warn('อ่านรูปไม่ได้:', file && file.name, e);
+        return null;
+      }
+    })
+  );
+
+  const ok = results.filter(Boolean);
+
+  ok.forEach(item => {
+    storeDraftOriginalImgs.push(item.clean);
+    storeDraftImgs.push(item.marked);
+  });
+
+  input.value = '';
   renderStoreThumbs();
 
-  if(skipped){
-    flash('เพิ่มรูปตามลำดับแล้ว ✓ • รูปที่ 1 = รูปปก • สูงสุด 8 รูป');
-  }else if(failed){
-    flash('เพิ่ม '+newMarked.length+' รูป • อ่านไม่ได้ '+failed+' รูป');
-  }else if(newMarked.length){
-    flash('เพิ่ม '+newMarked.length+' รูปตามลำดับ ✓ • รูปที่ 1 = รูปปก');
+  if(ok.length){
+    flash('เพิ่มรูปพร้อมกัน ' + ok.length + ' รูปแล้ว ✓');
+  }else{
+    flash('อ่านรูปไม่ได้ — แนะนำ JPG / PNG');
   }
 }
 
 function renderStoreThumbs(){
   const box=document.getElementById('storeThumbs');if(!box)return;
-  box.innerHTML=storeDraftImgs.map((src,i)=>`
-    <div class="sp-thumb ${i===0?'is-cover':''}">
-      <img src="${src}" alt="รูปสินค้า ${i+1}">
-      <span class="sp-index">${i+1}</span>
-      ${i===0?'<span class="sp-cover">รูปปก</span>':''}
-      <div class="sp-tools">
-        ${i===0?'':`<button type="button" class="mini sp-setcover" onclick="setStoreCoverImg(${i})">ตั้งเป็นรูปปก</button>`}
-        <button type="button" class="mini" onclick="moveStoreImg(${i},-1)" ${i===0?'disabled':''}>←</button>
-        <button type="button" class="mini" onclick="moveStoreImg(${i},1)" ${i===storeDraftImgs.length-1?'disabled':''}>→</button>
-        <button type="button" class="mini del" onclick="rmStoreImg(${i})">✕</button>
-      </div>
-    </div>`).join('');
-
-  let count=document.getElementById('storeImgCount');
-  if(!count){
-    count=document.createElement('div');
-    count.id='storeImgCount';
-    count.className='store-img-count';
-    box.insertAdjacentElement('afterend',count);
-  }
-  count.textContent=storeDraftImgs.length
-    ? `เลือกแล้ว ${storeDraftImgs.length} รูป • รูปหมายเลข 1 = รูปปก`
-    : 'ยังไม่ได้เลือกรูป';
-
-  const up=document.getElementById('storeUpBtn');
-  if(up)up.style.display=storeDraftImgs.length>=8?'none':'flex';
+  box.innerHTML=storeDraftImgs.map((src,i)=>`<div class="sp-thumb"><img src="${src}">${i===0?'<span class="sp-cover">รูปปก</span>':''}<span class="sp-index">${i+1}</span><div class="sp-tools"><button type="button" class="mini" onclick="moveStoreImg(${i},-1)" ${i===0?'disabled':''}>←</button><button type="button" class="mini" onclick="moveStoreImg(${i},1)" ${i===storeDraftImgs.length-1?'disabled':''}>→</button><button type="button" class="mini del" onclick="rmStoreImg(${i})">✕</button></div></div>`).join('');
+  const up=document.getElementById('storeUpBtn');if(up)up.style.display=storeDraftImgs.length>=10?'none':'flex';
 }
-function setStoreCoverImg(i){
-  if(i<=0||i>=storeDraftImgs.length)return;
-  const img=storeDraftImgs.splice(i,1)[0];
-  const original=storeDraftOriginalImgs.splice(i,1)[0];
-  storeDraftImgs.unshift(img);
-  storeDraftOriginalImgs.unshift(original);
-  renderStoreThumbs();
-  flash('ตั้งรูปหมายเลข 1 เป็นรูปปกแล้ว ✓');
-}
-
 function moveStoreImg(i,d){const j=i+d;if(j<0||j>=storeDraftImgs.length)return;[storeDraftImgs[i],storeDraftImgs[j]]=[storeDraftImgs[j],storeDraftImgs[i]];[storeDraftOriginalImgs[i],storeDraftOriginalImgs[j]]=[storeDraftOriginalImgs[j],storeDraftOriginalImgs[i]];renderStoreThumbs()}
 function rmStoreImg(i){storeDraftImgs.splice(i,1);storeDraftOriginalImgs.splice(i,1);renderStoreThumbs()}
 async function saveStoreProduct(){
@@ -2644,7 +2596,7 @@ routeFromUrl();
 initAdminAuth();
 initCloud();
 </script>
-<script>window.BAIMINT_BUILD='V30-multi-picker-order-cover-controls';</script>
+<script>window.BAIMINT_BUILD='V32-native-multiple-preview-delete';</script>
 </body>
 </html>
 
