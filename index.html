@@ -2207,11 +2207,11 @@ function renderStoreAdminTab(){
   b.innerHTML=`
     <div class="store-formbox">
       <div class="store-form-title">${p?'แก้ไขสินค้า':'เพิ่มสินค้าใหม่'}</div>
-      <label>รูปสินค้า <span style="font-weight:400;color:#667085">(เลือกหลายรูปพร้อมกันได้ • รูปหมายเลข 1 ที่เลือก = รูปปกอัตโนมัติ • สูงสุด 8 รูป)</span></label>
+      <label>รูปสินค้า <span style="font-weight:400;color:#667085">(เลือกหลายรูปพร้อมกันได้ • แตะติ๊กเลือกได้หลายรูป • รูปหมายเลข 1 = รูปปกอัตโนมัติ • สูงสุด 8 รูป)</span></label>
       <div style="background:#f5f9ff;border:1px solid #dce9f8;border-radius:9px;padding:8px 10px;margin:0 0 8px;color:#41617f;font-size:.69rem">ระบบจะใส่ลายน้ำ <b>mn only shop</b> สีขาวจาง ๆ ให้รูปที่แสดงบนเว็บอัตโนมัติ ส่วนรูปต้นฉบับสะอาดจะใช้เฉพาะตอนสร้างภาพโพสต์ของสินค้า <b>พร้อมขาย • มือ 1 / มือ 2</b> เท่านั้น</div>
       <div class="imgrow" id="storeThumbs"></div>
-      <button type="button" class="upbtn store-upload" id="storeUpBtn" onclick="openStoreMultiPicker()"><strong>＋</strong><span>เลือกหลายรูปจากอัลบั้ม</span></button>
-      <input type="file" id="storeFile" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="pickStoreImgs(this)">
+      <button type="button" class="upbtn store-upload" id="storeUpBtn" onclick="openStoreMultiPicker()"><strong>＋</strong><span>เลือกหลายรูปจากอัลบั้ม (ติ๊กหลายรูป)</span></button>
+      <input type="file" id="storeFile" accept="image/*" multiple style="display:none" aria-hidden="true" tabindex="-1">
       <div class="store-form-grid">
         <div><label>ประเภทเครื่อง *</label><select id="sp-itemType"><option value="มือ 1" ${p&&p.itemType==='มือ 1'?'selected':''}>มือ 1</option><option value="มือ 2" ${!p||p.itemType!=='มือ 1'?'selected':''}>มือ 2</option></select></div>
         <div><label>ยี่ห้อ *</label><input id="sp-brand" list="spBrandList" placeholder="เช่น Samsung" value="${p?esc(p.brand||''):''}"><datalist id="spBrandList">${brands.map(v=>`<option value="${esc(v)}">`).join('')}</datalist></div>
@@ -2274,14 +2274,32 @@ async function hideStoreProduct(id){
   p.status='ซ่อน'; await save(); renderStore(); tab('store'); flash('ซ่อนสินค้าแล้ว ✓');
 }
 function openStoreMultiPicker(){
-  const input=document.getElementById('storeFile');
-  if(!input)return;
   if(storeDraftImgs.length>=8){flash('ใส่รูปได้สูงสุด 8 รูป');return;}
-  // ล้างค่าเดิมก่อนเปิด เพื่อให้เลือกรูปชุดเดิมซ้ำได้ และยืนยันว่าเป็นโหมดเลือกหลายรูป
-  input.value='';
-  input.multiple=true;
-  input.click();
+
+  // สร้าง input ใหม่ทุกครั้ง เพื่อให้ Android/Chrome รับค่า multiple ตั้งแต่ตอนเปิด native picker
+  // เมื่อเปิดแกลเลอรีแล้ว สามารถแตะติ๊กเลือกรูปหลายรูปก่อนกดยืนยันได้
+  const picker=document.createElement('input');
+  picker.type='file';
+  picker.accept='image/*';
+  picker.multiple=true;
+  picker.setAttribute('multiple','multiple');
+  picker.setAttribute('accept','image/*');
+  picker.style.position='fixed';
+  picker.style.left='-9999px';
+  picker.style.top='-9999px';
+
+  picker.addEventListener('change',async function(){
+    try{
+      await pickStoreImgs(picker);
+    }finally{
+      picker.remove();
+    }
+  },{once:true});
+
+  document.body.appendChild(picker);
+  picker.click();
 }
+
 async function pickStoreImgs(input){
   const selected=Array.from(input.files||[]);
   if(!selected.length)return;
@@ -2601,7 +2619,7 @@ routeFromUrl();
 initAdminAuth();
 initCloud();
 </script>
-<script>window.BAIMINT_BUILD='V27-email-auth-multiupload-only';</script>
+<script>window.BAIMINT_BUILD='V28-force-native-multiselect';</script>
 </body>
 </html>
 
