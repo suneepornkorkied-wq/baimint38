@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- BUILD v21-edit-multiupload: direct product edit + multi-image ordered picker -->
+<!-- BUILD v22-native-multiselect: direct native multi-image picker for mobile -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
@@ -204,6 +204,11 @@
   .thumb.wide{width:96px;height:54px}
   .upbtn{display:inline-block;margin:0;font-family:'Bai Jamjuree';font-weight:500;font-size:.82rem;
     padding:9px 14px;border:1.5px dashed var(--accent);color:var(--accent);border-radius:10px;cursor:pointer;background:var(--accent-soft)}
+  /* Native multi-file control: the real <input multiple> covers the button.
+     This avoids programmatic .click()/duplicate-label issues on Android browsers. */
+  .multi-file-label{position:relative;overflow:hidden;display:inline-flex!important;align-items:center;justify-content:center;gap:5px;user-select:none;-webkit-tap-highlight-color:transparent}
+  .multi-file-label>input[type=file]{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;opacity:0!important;cursor:pointer!important;pointer-events:auto!important;padding:0!important;border:0!important;font-size:100px!important}
+  .multi-file-note{font-size:.68rem;color:#667085;margin-top:6px;line-height:1.45}
 
   /* ---------- showroom / หน้าร้านมือถือ ---------- */
   #storeView,#productView{min-height:100vh;background:#f4f6f8}
@@ -2102,8 +2107,8 @@ function tab(name){
     b.innerHTML=`
       <label>รูปภาพ (เปิดอัลบั้ม 1 ครั้ง แล้วติ๊กเลือกหลายรูปได้ • สูงสุด 4 รูป)</label>
       <div class="imgrow" id="postThumbs"></div>
-      <label class="upbtn post-upload-direct" id="postUpBtn" for="postFile" role="button">+ เลือกหลายรูปพร้อมกัน</label>
-      <input type="file" id="postFile" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0,0,0,0)" onchange="pickPostImg(this)">
+      <label class="upbtn post-upload-direct multi-file-label" id="postUpBtn" role="button">+ เลือกหลายรูปพร้อมกัน<input type="file" class="postFilePicker" name="postImages[]" accept="image/*,.jpg,.jpeg,.png,.webp" multiple="multiple" onchange="pickPostImg(this)"></label>
+      <div class="multi-file-note">เลือกภาพทั้งหมดในรอบเดียว แล้วค่อยกด “ลงโพสต์”</div>
       <label>ข้อความโพสต์ (แคปชั่น)</label>
       <textarea id="p-caption" rows="4" placeholder="เล่าเรื่องร้าน งานที่ทำ ไลฟ์สไตล์ หรือสินค้าที่อยากโชว์..."></textarea>
       <div class="row"><div><label>ราคาโดยประมาณ (ถ้ามี)</label><input id="p-price" type="number" inputmode="numeric" placeholder="เว้นว่างได้"></div>
@@ -2210,8 +2215,8 @@ function renderStoreAdminTab(){
       <label>รูปสินค้า <span style="font-weight:400;color:#667085">(เลือกหลายรูปพร้อมกันได้ • รูปแรกที่เลือก = รูปปก • สูงสุด 8 รูป)</span></label>
       <div style="background:#f5f9ff;border:1px solid #dce9f8;border-radius:9px;padding:8px 10px;margin:0 0 8px;color:#41617f;font-size:.69rem">ระบบจะใส่ลายน้ำ <b>mn only shop</b> สีขาวจาง ๆ ให้รูปที่แสดงบนเว็บอัตโนมัติ ส่วนรูปต้นฉบับสะอาดจะใช้เฉพาะตอนสร้างภาพโพสต์ของสินค้า <b>พร้อมขาย • มือ 1 / มือ 2</b> เท่านั้น</div>
       <div class="imgrow" id="storeThumbs"></div>
-      <button type="button" class="upbtn store-upload" id="storeUpBtn" onclick="document.getElementById('storeFile').click()"><strong>＋</strong><span>เลือกหลายรูป</span></button>
-      <input type="file" id="storeFile" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="pickStoreImgs(this)">
+      <label class="upbtn store-upload multi-file-label" id="storeUpBtn" role="button"><strong>＋</strong><span>เลือกหลายรูปพร้อมกัน</span><input type="file" id="storeFile" name="storeImages[]" accept="image/*,.jpg,.jpeg,.png,.webp" multiple="multiple" onchange="pickStoreImgs(this)"></label>
+      <div class="multi-file-note">กดปุ่มครั้งเดียว แล้วเลือกหลายภาพในอัลบั้มก่อนกด “เพิ่ม/เปิด/เสร็จสิ้น” จากนั้นค่อยกด “บันทึกสินค้า”</div>
       <div class="store-form-grid">
         <div><label>ประเภทเครื่อง *</label><select id="sp-itemType"><option value="มือ 1" ${p&&p.itemType==='มือ 1'?'selected':''}>มือ 1</option><option value="มือ 2" ${!p||p.itemType!=='มือ 1'?'selected':''}>มือ 2</option></select></div>
         <div><label>ยี่ห้อ *</label><input id="sp-brand" list="spBrandList" placeholder="เช่น Samsung" value="${p?esc(p.brand||''):''}"><datalist id="spBrandList">${brands.map(v=>`<option value="${esc(v)}">`).join('')}</datalist></div>
@@ -2274,6 +2279,7 @@ async function hideStoreProduct(id){
   p.status='ซ่อน'; await save(); renderStore(); tab('store'); flash('ซ่อนสินค้าแล้ว ✓');
 }
 async function pickStoreImgs(input){
+  input.multiple=true; input.removeAttribute('capture');
   const files=Array.from(input.files||[]); if(!files.length)return;
   let added=0,failed=0;
   // ประมวลผลตามลำดับที่ FileList ส่งมาจากอัลบั้ม รูปแรก = ลำดับ 1 / รูปปก
@@ -2420,6 +2426,7 @@ function resizeImg(file,maxW,q,watermark){
   });
 }
 async function pickPostImg(input){
+  input.multiple=true; input.removeAttribute('capture');
   const files=Array.from(input.files||[]); if(!files.length) return;
   let added=0, failed=0;
   for(const f of files){
@@ -2451,8 +2458,8 @@ function openComposer(){
     <p class="desc">โพสต์รูป + แคปชั่น (ต้องมีรูปอย่างน้อย 1 รูป)</p>
     <label>รูปภาพ (เปิดอัลบั้ม 1 ครั้ง แล้วติ๊กเลือกหลายรูปได้ • สูงสุด 4 รูป)</label>
     <div class="imgrow" id="postThumbs"></div>
-    <label class="upbtn post-upload-direct" id="postUpBtn" for="postFile" role="button">+ เลือกหลายรูปพร้อมกัน</label>
-    <input type="file" id="postFile" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0,0,0,0)" onchange="pickPostImg(this)">
+    <label class="upbtn post-upload-direct multi-file-label" id="postUpBtn" role="button">+ เลือกหลายรูปพร้อมกัน<input type="file" class="postFilePicker" name="postImages[]" accept="image/*,.jpg,.jpeg,.png,.webp" multiple="multiple" onchange="pickPostImg(this)"></label>
+    <div class="multi-file-note">เลือกภาพทั้งหมดในรอบเดียว แล้วค่อยกด “ลงโพสต์”</div>
     <label>ข้อความโพสต์ (แคปชั่น)</label>
     <textarea id="p-caption" rows="4" placeholder="เล่าเรื่องร้าน งานที่ทำ ไลฟ์สไตล์ หรือสินค้าที่อยากโชว์..."></textarea>
     <div class="row"><div><label>ราคาโดยประมาณ (ถ้ามี)</label><input id="p-price" type="number" inputmode="numeric" placeholder="เว้นว่างได้"></div>
@@ -2565,7 +2572,7 @@ routeFromUrl();
 initAdminAuth();
 initCloud();
 </script>
-<script>window.BAIMINT_BUILD='V33-fix-post-multiselect';</script>
+<script>window.BAIMINT_BUILD='V34-native-mobile-multiselect';</script>
 </body>
 </html>
 
