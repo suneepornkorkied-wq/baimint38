@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- BUILD v26-google-only-vivo-v29-android15: Google-only admin login + direct native multi-select + Files fallback -->
+<!-- BUILD v27-facebook-style-photo-flow: Google-only admin + vivo V29 Android 15 + Facebook-style photo review -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
@@ -213,6 +213,38 @@
   .multi-upload-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   .multi-file-label.secondary{background:#fff;border-style:solid;border-color:#cbd5e1;color:#475569}
   .multi-file-note{font-size:.68rem;color:#667085;margin-top:6px;line-height:1.45}
+  /* Facebook-style photo review flow */
+  .fb-photo-launch{min-height:48px;padding:12px 16px!important;border-radius:12px!important;font-size:.9rem!important;font-weight:700!important;background:#eef6ff!important;border-color:#8bbcf2!important;color:#0a65c8!important}
+  .fb-photo-launch.secondary{background:#fff!important;border-style:solid!important;color:#526173!important;border-color:#d8e0e8!important;font-weight:600!important}
+  .fb-photo-overlay{position:fixed;inset:0;z-index:20000;background:#fff;display:none;flex-direction:column;color:#111827;font-family:'Noto Sans Thai','Bai Jamjuree',sans-serif}
+  .fb-photo-overlay.show{display:flex}
+  .fb-photo-head{height:58px;flex:0 0 58px;display:grid;grid-template-columns:46px 1fr 92px;align-items:center;border-bottom:1px solid #e5e7eb;background:#fff;padding:0 10px;position:sticky;top:0;z-index:3}
+  .fb-photo-close{width:40px;height:40px;border:0;background:transparent;font-size:1.75rem;line-height:1;cursor:pointer;color:#111827}
+  .fb-photo-title{text-align:center;font-family:'Bai Jamjuree';font-weight:700;font-size:1.05rem}
+  .fb-photo-done-top{border:0;background:#e8f2ff;color:#0a65c8;border-radius:999px;padding:8px 11px;font-family:'Bai Jamjuree';font-size:.72rem;font-weight:700;cursor:pointer}
+  .fb-photo-bar{height:48px;flex:0 0 48px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid #eef1f4;background:#fff}
+  .fb-photo-album{font-family:'Bai Jamjuree';font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:6px}
+  .fb-photo-count{font-size:.72rem;color:#0a65c8;background:#edf5ff;border-radius:999px;padding:5px 9px;font-weight:700}
+  .fb-photo-scroll{flex:1;overflow:auto;background:#f5f6f8;padding-bottom:88px;overscroll-behavior:contain}
+  .fb-photo-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;background:#fff}
+  .fb-photo-cell{position:relative;aspect-ratio:1/1;background:#eef1f4;overflow:hidden;cursor:pointer;border:0;padding:0}
+  .fb-photo-cell img{width:100%;height:100%;object-fit:cover;display:block}
+  .fb-photo-cell.is-selected::after{content:'';position:absolute;inset:0;border:3px solid #1877f2;pointer-events:none}
+  .fb-photo-badge{position:absolute;right:7px;top:7px;width:28px;height:28px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.34);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Bai Jamjuree';font-weight:700;font-size:.76rem;box-shadow:0 1px 5px rgba(0,0,0,.22)}
+  .fb-photo-cell.is-selected .fb-photo-badge{background:#1877f2}
+  .fb-photo-bottom{position:fixed;left:0;right:0;bottom:0;z-index:20002;background:#fff;border-top:1px solid #dfe3e8;padding:10px 14px max(10px,env(safe-area-inset-bottom));display:flex;gap:9px;align-items:center}
+  .fb-photo-more{position:relative;overflow:hidden;min-width:92px;border:1px solid #d8e0e8;background:#fff;color:#344054;border-radius:10px;padding:11px 12px;font-family:'Bai Jamjuree';font-weight:700;font-size:.78rem;text-align:center}
+  .fb-photo-more input{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:100px;cursor:pointer}
+  .fb-photo-next{flex:1;border:0;background:#1877f2;color:#fff;border-radius:10px;padding:12px 14px;font-family:'Bai Jamjuree';font-weight:700;font-size:.9rem;cursor:pointer}
+  .fb-photo-next:disabled{background:#c9d8ec;color:#fff;cursor:not-allowed}
+  .fb-photo-empty{padding:42px 22px;text-align:center;color:#667085;font-size:.82rem;line-height:1.55}
+  .fb-photo-empty b{display:block;color:#111827;font-family:'Bai Jamjuree';font-size:1rem;margin-bottom:5px}
+  .selected-photo-strip{display:flex;gap:7px;overflow-x:auto;padding:7px 1px 4px;scrollbar-width:none}.selected-photo-strip::-webkit-scrollbar{display:none}
+  .selected-photo-item{position:relative;flex:0 0 74px;width:74px;height:74px;border-radius:9px;overflow:hidden;border:1px solid #d9e1ea;background:#fff}
+  .selected-photo-item img{width:100%;height:100%;object-fit:cover;display:block}
+  .selected-photo-num{position:absolute;left:5px;top:5px;width:22px;height:22px;border-radius:50%;background:#1877f2;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Bai Jamjuree';font-size:.67rem;font-weight:700;border:2px solid #fff}
+  .selected-photo-remove{position:absolute;right:4px;top:4px;width:22px;height:22px;border:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:.7rem;cursor:pointer}
+
 
   /* ---------- showroom / หน้าร้านมือถือ ---------- */
   #storeView,#productView{min-height:100vh;background:#f4f6f8}
@@ -2099,16 +2131,16 @@ function tab(name){
       <label>รูปภาพ (เปิดอัลบั้ม 1 ครั้ง แล้วติ๊กเลือกหลายรูปได้ • สูงสุด 8 รูป)</label>
       <div class="imgrow" id="postThumbs"></div>
       <div class="multi-upload-actions" id="postUploadActions">
-        <label class="upbtn post-upload-direct multi-file-label" id="postUpBtn" role="button">
-          + เลือกหลายรูปจากอัลบั้ม
-          <input type="file" id="postFile" accept="image/*" multiple onchange="pickPostImg(this)">
+        <label class="upbtn multi-file-label fb-photo-launch" id="postUpBtn" role="button">
+          ＋ เพิ่มรูปภาพ
+          <input type="file" id="postFile" accept="image/*" multiple onchange="prepareFacebookPhotoPicker(this,'post')">
         </label>
-        <label class="upbtn multi-file-label secondary" role="button">
+        <label class="upbtn multi-file-label fb-photo-launch secondary" role="button">
           เลือกผ่าน Files
-          <input type="file" id="postFileFallback" accept="*/*" multiple onchange="pickPostImg(this)">
+          <input type="file" id="postFileFallback" accept="*/*" multiple onchange="prepareFacebookPhotoPicker(this,'post')">
         </label>
       </div>
-      <div class="multi-file-note">สำหรับ vivo V29 / Android 15: ใช้ปุ่ม “เลือกหลายรูปจากอัลบั้ม” ก่อน หากอัลบั้มยังเด้งกลับหลังแตะรูปแรก ให้ใช้ “เลือกผ่าน Files” แล้วเลือกหลายไฟล์ก่อนกด เปิด/เสร็จสิ้น</div>
+      <div class="multi-file-note">กดเพิ่มรูปครั้งเดียว → เลือกหลายรูป → จัดลำดับด้วยหมายเลข 1, 2, 3… → กด “ต่อไป” → แล้วค่อยลงโพสต์</div>
       <label>ข้อความโพสต์ (แคปชั่น)</label>
       <textarea id="p-caption" rows="4" placeholder="เล่าเรื่องร้าน งานที่ทำ ไลฟ์สไตล์ หรือสินค้าที่อยากโชว์..."></textarea>
       <div class="row"><div><label>ราคาโดยประมาณ (ถ้ามี)</label><input id="p-price" type="number" inputmode="numeric" placeholder="เว้นว่างได้"></div>
@@ -2186,7 +2218,7 @@ function tab(name){
       <label>Facebook Messenger (username เพจ เช่น bigmobile หรือลิงก์ m.me)</label><input id="s-msgr" value="${esc(s.messenger)}" placeholder="เช่น bigmobile">
       <label>เบอร์โทร (เบอร์หลัก)</label><input id="s-phone" value="${esc(s.phone)}">
       <label>เบอร์โทรสำรอง (ถ้ามี)</label><input id="s-phone2" value="${esc(s.phone2||'')}" placeholder="เว้นว่างได้">
-      <div style="margin:12px 0;padding:11px 12px;border:1px solid #dbe7f5;background:#f7fbff;border-radius:10px;font-size:.75rem;color:#41617f">🔐 แอดมินใช้การยืนยันผ่านอีเมลเจ้าของร้าน ระบบไม่ใช้รหัสผ่านตัวเลขอีกต่อไป</div>
+      <div style="margin:12px 0;padding:11px 12px;border:1px solid #dbe7f5;background:#f7fbff;border-radius:10px;font-size:.75rem;color:#41617f">🔐 แอดมินเข้าสู่ระบบด้วยบัญชี Google ของเจ้าของร้าน และระบบจะจำการเข้าสู่ระบบไว้ในเบราว์เซอร์</div>
       <button class="btn" onclick="saveShop()">บันทึกข้อมูลร้าน</button>
       <div style="margin-top:22px;padding-top:16px;border-top:1px solid #e5e7eb">
         <label style="font-weight:600">สำรอง / กู้คืนข้อมูล</label>
@@ -2195,6 +2227,117 @@ function tab(name){
         <button type="button" class="upbtn" style="width:100%;margin-top:8px" onclick="document.getElementById('restoreFile').click()">⬆️ กู้คืนจากไฟล์สำรอง</button>
         <input type="file" id="restoreFile" accept="application/json,.json" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="restoreData(this)">
       </div>`;
+  }
+}
+
+
+/* ---------- Facebook-style photo review manager ---------- */
+let fbPhotoPickerState={kind:null,files:[],selected:[],urls:[],max:8};
+function clearFacebookPhotoPickerState(){
+  (fbPhotoPickerState.urls||[]).forEach(u=>{try{URL.revokeObjectURL(u)}catch(e){}});
+  fbPhotoPickerState={kind:null,files:[],selected:[],urls:[],max:8};
+}
+function ensureFacebookPhotoOverlay(){
+  let ov=document.getElementById('fbPhotoOverlay');
+  if(ov) return ov;
+  ov=document.createElement('div');
+  ov.id='fbPhotoOverlay';
+  ov.className='fb-photo-overlay';
+  ov.innerHTML=`
+    <div class="fb-photo-head">
+      <button type="button" class="fb-photo-close" onclick="cancelFacebookPhotoPicker()">×</button>
+      <div class="fb-photo-title">เลือกรูปภาพ</div>
+      <button type="button" class="fb-photo-done-top" onclick="confirmFacebookPhotoPicker()">เสร็จสิ้น</button>
+    </div>
+    <div class="fb-photo-bar">
+      <div class="fb-photo-album">แกลเลอรี <span style="font-size:.8rem">⌄</span></div>
+      <div class="fb-photo-count" id="fbPhotoCount">เลือก 0 รูป</div>
+    </div>
+    <div class="fb-photo-scroll"><div class="fb-photo-grid" id="fbPhotoGrid"></div></div>
+    <div class="fb-photo-bottom">
+      <label class="fb-photo-more">＋ เพิ่มอีก
+        <input type="file" id="fbPhotoMoreInput" accept="image/*" multiple onchange="appendFacebookPhotoPicker(this)">
+      </label>
+      <button type="button" class="fb-photo-next" id="fbPhotoNext" onclick="confirmFacebookPhotoPicker()">ต่อไป</button>
+    </div>`;
+  document.body.appendChild(ov);
+  return ov;
+}
+function currentDraftPhotoCount(kind){ return kind==='store'?storeDraftImgs.length:postDraftImgs.length; }
+function prepareFacebookPhotoPicker(input,kind){
+  const raw=filesFromPickerSource(input).filter(looksLikeImageFile);
+  if(input&&input.tagName==='INPUT') input.value='';
+  if(!raw.length) return;
+  const room=Math.max(0,8-currentDraftPhotoCount(kind));
+  if(room<=0){flash('ใส่รูปได้สูงสุด 8 รูป');return;}
+  clearFacebookPhotoPickerState();
+  const files=raw;
+  fbPhotoPickerState.kind=kind;
+  fbPhotoPickerState.files=files;
+  fbPhotoPickerState.urls=files.map(f=>URL.createObjectURL(f));
+  fbPhotoPickerState.selected=files.map((_,i)=>i<room);
+  fbPhotoPickerState.max=room;
+  const ov=ensureFacebookPhotoOverlay();
+  ov.classList.add('show');
+  document.body.style.overflow='hidden';
+  renderFacebookPhotoPicker();
+  if(files.length>room) flash('เลือกได้อีกสูงสุด '+room+' รูป');
+}
+function appendFacebookPhotoPicker(input){
+  const extra=filesFromPickerSource(input).filter(looksLikeImageFile);
+  if(input&&input.tagName==='INPUT') input.value='';
+  if(!extra.length) return;
+  const room=Math.max(0,fbPhotoPickerState.max-fbPhotoPickerState.selected.filter(Boolean).length);
+  extra.forEach((f,idx)=>{
+    fbPhotoPickerState.files.push(f);
+    fbPhotoPickerState.urls.push(URL.createObjectURL(f));
+    fbPhotoPickerState.selected.push(idx<room);
+  });
+  renderFacebookPhotoPicker();
+}
+function selectedFacebookPhotoIndexes(){
+  const out=[]; fbPhotoPickerState.selected.forEach((v,i)=>{if(v)out.push(i)}); return out;
+}
+function toggleFacebookPhoto(i){
+  if(fbPhotoPickerState.selected[i]) fbPhotoPickerState.selected[i]=false;
+  else{
+    const n=fbPhotoPickerState.selected.filter(Boolean).length;
+    if(n>=fbPhotoPickerState.max){flash('เลือกได้สูงสุด '+fbPhotoPickerState.max+' รูปในรอบนี้');return;}
+    fbPhotoPickerState.selected[i]=true;
+  }
+  renderFacebookPhotoPicker();
+}
+function renderFacebookPhotoPicker(){
+  const grid=document.getElementById('fbPhotoGrid'); if(!grid)return;
+  const sel=selectedFacebookPhotoIndexes();
+  const order=new Map(sel.map((idx,pos)=>[idx,pos+1]));
+  grid.innerHTML=fbPhotoPickerState.files.map((f,i)=>{
+    const n=order.get(i)||'';
+    return `<button type="button" class="fb-photo-cell ${n?'is-selected':''}" onclick="toggleFacebookPhoto(${i})"><img src="${fbPhotoPickerState.urls[i]}" alt=""><span class="fb-photo-badge">${n||'✓'}</span></button>`;
+  }).join('')||'<div class="fb-photo-empty"><b>ยังไม่มีรูป</b>กด “เพิ่มอีก” เพื่อเลือกรูปจากเครื่อง</div>';
+  const count=document.getElementById('fbPhotoCount'); if(count)count.textContent='เลือก '+sel.length+' รูป';
+  const next=document.getElementById('fbPhotoNext'); if(next){next.disabled=!sel.length;next.textContent=sel.length?'ต่อไป ('+sel.length+')':'ต่อไป';}
+}
+function cancelFacebookPhotoPicker(){
+  const ov=document.getElementById('fbPhotoOverlay'); if(ov)ov.classList.remove('show');
+  document.body.style.overflow='';
+  clearFacebookPhotoPickerState();
+}
+async function confirmFacebookPhotoPicker(){
+  const indexes=selectedFacebookPhotoIndexes();
+  if(!indexes.length){flash('เลือกรูปอย่างน้อย 1 รูป');return;}
+  const files=indexes.map(i=>fbPhotoPickerState.files[i]);
+  const kind=fbPhotoPickerState.kind;
+  const next=document.getElementById('fbPhotoNext'); if(next){next.disabled=true;next.textContent='กำลังเตรียมรูป...';}
+  try{
+    if(kind==='store') await pickStoreImgs(files); else await pickPostImg(files);
+    const ov=document.getElementById('fbPhotoOverlay'); if(ov)ov.classList.remove('show');
+    document.body.style.overflow='';
+    clearFacebookPhotoPickerState();
+  }catch(e){
+    console.warn('confirm photo picker failed',e);
+    if(next){next.disabled=false;next.textContent='ต่อไป ('+indexes.length+')';}
+    flash('เตรียมรูปไม่สำเร็จ กรุณาลองใหม่');
   }
 }
 
@@ -2244,14 +2387,14 @@ function renderStoreAdminTab(){
       <div style="background:#f5f9ff;border:1px solid #dce9f8;border-radius:9px;padding:8px 10px;margin:0 0 8px;color:#41617f;font-size:.69rem">ระบบจะใส่ลายน้ำ <b>mn only shop</b> สีขาวจาง ๆ ให้รูปที่แสดงบนเว็บอัตโนมัติ ส่วนรูปต้นฉบับสะอาดจะใช้เฉพาะตอนสร้างภาพโพสต์ของสินค้า <b>พร้อมขาย • มือ 1 / มือ 2</b> เท่านั้น</div>
       <div class="imgrow" id="storeThumbs"></div>
       <div class="multi-upload-actions" id="storeUploadActions">
-        <label class="upbtn store-upload multi-file-label" id="storeUpBtn" role="button"><strong>＋</strong><span>เลือกหลายรูปจากอัลบั้ม</span>
-          <input type="file" id="storeFile" accept="image/*" multiple onchange="pickStoreImgs(this)">
+        <label class="upbtn multi-file-label fb-photo-launch" id="storeUpBtn" role="button"><strong>＋</strong><span>เพิ่มรูปสินค้า</span>
+          <input type="file" id="storeFile" accept="image/*" multiple onchange="prepareFacebookPhotoPicker(this,'store')">
         </label>
-        <label class="upbtn multi-file-label secondary" role="button"><span>เลือกผ่าน Files</span>
-          <input type="file" id="storeFileFallback" accept="*/*" multiple onchange="pickStoreImgs(this)">
+        <label class="upbtn multi-file-label fb-photo-launch secondary" role="button"><span>เลือกผ่าน Files</span>
+          <input type="file" id="storeFileFallback" accept="*/*" multiple onchange="prepareFacebookPhotoPicker(this,'store')">
         </label>
       </div>
-      <div class="multi-file-note">สำหรับ vivo V29 / Android 15: กด “เลือกหลายรูปจากอัลบั้ม” แล้วติ๊กหลายรูปก่อนยืนยัน หากอัลบั้มยังเด้งกลับหลังรูปแรก ให้ใช้ “เลือกผ่าน Files” เป็นทางสำรอง</div>
+      <div class="multi-file-note">กดเพิ่มรูปครั้งเดียว → เลือกหลายรูป → หน้าถัดไปจะแสดงรูปเป็นตารางพร้อมเลขลำดับ → รูปหมายเลข 1 จะเป็นรูปปก</div>
       <div class="store-form-grid">
         <div><label>ประเภทเครื่อง *</label><select id="sp-itemType"><option value="มือ 1" ${p&&p.itemType==='มือ 1'?'selected':''}>มือ 1</option><option value="มือ 2" ${!p||p.itemType!=='มือ 1'?'selected':''}>มือ 2</option></select></div>
         <div><label>ยี่ห้อ *</label><input id="sp-brand" list="spBrandList" placeholder="เช่น Samsung" value="${p?esc(p.brand||''):''}"><datalist id="spBrandList">${brands.map(v=>`<option value="${esc(v)}">`).join('')}</datalist></div>
@@ -2487,11 +2630,9 @@ async function pickPostImg(source){
 }
 function renderPostThumbs(){
   const box=document.getElementById('postThumbs'); if(!box) return;
+  box.className='selected-photo-strip';
   box.innerHTML=postDraftImgs.map((src,i)=>
-    `<div style="position:relative">
-       <img class="thumb" src="${src}">
-       <button class="mini del" style="position:absolute;top:-6px;right:-6px;padding:2px 7px;border-radius:50%;background:#fff" onclick="rmPostImg(${i})">✕</button>
-     </div>`).join('');
+    `<div class="selected-photo-item"><img src="${src}"><span class="selected-photo-num">${i+1}</span><button type="button" class="selected-photo-remove" onclick="rmPostImg(${i})">×</button></div>`).join('');
   const actions=document.getElementById('postUploadActions');
   if(actions) actions.style.display = postDraftImgs.length>=8 ? 'none':'flex';
 }
@@ -2503,16 +2644,16 @@ function openComposer(){
     <label>รูปภาพ (เปิดอัลบั้ม 1 ครั้ง แล้วติ๊กเลือกหลายรูปได้ • สูงสุด 8 รูป)</label>
     <div class="imgrow" id="postThumbs"></div>
     <div class="multi-upload-actions" id="postUploadActions">
-      <label class="upbtn post-upload-direct multi-file-label" id="postUpBtn" role="button">
-        + เลือกหลายรูปจากอัลบั้ม
-        <input type="file" id="postFile" accept="image/*" multiple onchange="pickPostImg(this)">
+      <label class="upbtn multi-file-label fb-photo-launch" id="postUpBtn" role="button">
+        ＋ เพิ่มรูปภาพ
+        <input type="file" id="postFile" accept="image/*" multiple onchange="prepareFacebookPhotoPicker(this,'post')">
       </label>
-      <label class="upbtn multi-file-label secondary" role="button">
+      <label class="upbtn multi-file-label fb-photo-launch secondary" role="button">
         เลือกผ่าน Files
-        <input type="file" id="postFileFallback" accept="*/*" multiple onchange="pickPostImg(this)">
+        <input type="file" id="postFileFallback" accept="*/*" multiple onchange="prepareFacebookPhotoPicker(this,'post')">
       </label>
     </div>
-    <div class="multi-file-note">สำหรับ vivo V29 / Android 15: ใช้ปุ่ม “เลือกหลายรูปจากอัลบั้ม” ก่อน หากอัลบั้มยังเด้งกลับหลังแตะรูปแรก ให้ใช้ “เลือกผ่าน Files” แล้วเลือกหลายไฟล์ก่อนกด เปิด/เสร็จสิ้น</div>
+    <div class="multi-file-note">กดเพิ่มรูปครั้งเดียว → เลือกหลายรูป → จัดลำดับด้วยหมายเลข 1, 2, 3… → กด “ต่อไป” → แล้วค่อยลงโพสต์</div>
     <label>ข้อความโพสต์ (แคปชั่น)</label>
     <textarea id="p-caption" rows="4" placeholder="เล่าเรื่องร้าน งานที่ทำ ไลฟ์สไตล์ หรือสินค้าที่อยากโชว์..."></textarea>
     <div class="row"><div><label>ราคาโดยประมาณ (ถ้ามี)</label><input id="p-price" type="number" inputmode="numeric" placeholder="เว้นว่างได้"></div>
