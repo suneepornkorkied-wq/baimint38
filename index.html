@@ -2100,10 +2100,10 @@ function tab(name){
   }
   else if(name==='posts'){
     b.innerHTML=`
-      <label>รูปภาพ (เลือกหลายรูปพร้อมกันได้ • สูงสุด 4 รูป)</label>
+      <label>รูปภาพ (เปิดอัลบั้ม 1 ครั้ง แล้วติ๊กเลือกหลายรูปได้ • สูงสุด 4 รูป)</label>
       <div class="imgrow" id="postThumbs"></div>
-      <button type="button" class="upbtn" id="postUpBtn" onclick="document.getElementById('postFile').click()">+ เลือกหลายรูป</button>
-      <input type="file" id="postFile" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="pickPostImg(this)">
+      <label class="upbtn post-upload-direct" id="postUpBtn" for="postFile" role="button">+ เลือกหลายรูปพร้อมกัน</label>
+      <input type="file" id="postFile" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0,0,0,0)" onchange="pickPostImg(this)">
       <label>ข้อความโพสต์ (แคปชั่น)</label>
       <textarea id="p-caption" rows="4" placeholder="เล่าเรื่องร้าน งานที่ทำ ไลฟ์สไตล์ หรือสินค้าที่อยากโชว์..."></textarea>
       <div class="row"><div><label>ราคาโดยประมาณ (ถ้ามี)</label><input id="p-price" type="number" inputmode="numeric" placeholder="เว้นว่างได้"></div>
@@ -2207,11 +2207,11 @@ function renderStoreAdminTab(){
   b.innerHTML=`
     <div class="store-formbox">
       <div class="store-form-title">${p?'แก้ไขสินค้า':'เพิ่มสินค้าใหม่'}</div>
-      <label>รูปสินค้า <span style="font-weight:400;color:#667085">(เปิดอัลบั้ม 1 ครั้ง แล้วเลือกหลายรูปพร้อมกันได้ • รูปแรกที่เลือก = รูปปก • สูงสุด 10 รูป)</span></label>
+      <label>รูปสินค้า <span style="font-weight:400;color:#667085">(เลือกหลายรูปพร้อมกันได้ • รูปแรกที่เลือก = รูปปก • สูงสุด 8 รูป)</span></label>
       <div style="background:#f5f9ff;border:1px solid #dce9f8;border-radius:9px;padding:8px 10px;margin:0 0 8px;color:#41617f;font-size:.69rem">ระบบจะใส่ลายน้ำ <b>mn only shop</b> สีขาวจาง ๆ ให้รูปที่แสดงบนเว็บอัตโนมัติ ส่วนรูปต้นฉบับสะอาดจะใช้เฉพาะตอนสร้างภาพโพสต์ของสินค้า <b>พร้อมขาย • มือ 1 / มือ 2</b> เท่านั้น</div>
       <div class="imgrow" id="storeThumbs"></div>
-      <label class="upbtn store-upload" id="storeUpBtn" for="storeFile" role="button"><strong>＋</strong><span>เลือกหลายรูปพร้อมกัน</span></label>
-      <input type="file" id="storeFile" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0,0,0,0)" onchange="pickStoreImgs(this)">
+      <button type="button" class="upbtn store-upload" id="storeUpBtn" onclick="document.getElementById('storeFile').click()"><strong>＋</strong><span>เลือกหลายรูป</span></button>
+      <input type="file" id="storeFile" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="pickStoreImgs(this)">
       <div class="store-form-grid">
         <div><label>ประเภทเครื่อง *</label><select id="sp-itemType"><option value="มือ 1" ${p&&p.itemType==='มือ 1'?'selected':''}>มือ 1</option><option value="มือ 2" ${!p||p.itemType!=='มือ 1'?'selected':''}>มือ 2</option></select></div>
         <div><label>ยี่ห้อ *</label><input id="sp-brand" list="spBrandList" placeholder="เช่น Samsung" value="${p?esc(p.brand||''):''}"><datalist id="spBrandList">${brands.map(v=>`<option value="${esc(v)}">`).join('')}</datalist></div>
@@ -2274,57 +2274,26 @@ async function hideStoreProduct(id){
   p.status='ซ่อน'; await save(); renderStore(); tab('store'); flash('ซ่อนสินค้าแล้ว ✓');
 }
 async function pickStoreImgs(input){
-  // รับไฟล์ทั้งหมดจากการเลือกครั้งเดียวในอัลบั้มมือถือ
-  const files = Array.from(input.files || []);
-  if(!files.length) return;
-
-  const MAX_STORE_IMAGES = 10;
-  const remaining = MAX_STORE_IMAGES - storeDraftImgs.length;
-
-  if(remaining <= 0){
-    input.value = '';
-    flash('ใส่รูปได้สูงสุด 10 รูป');
-    return;
+  const files=Array.from(input.files||[]); if(!files.length)return;
+  let added=0,failed=0;
+  // ประมวลผลตามลำดับที่ FileList ส่งมาจากอัลบั้ม รูปแรก = ลำดับ 1 / รูปปก
+  for(const f of files){
+    if(storeDraftImgs.length>=8){flash('ใส่รูปได้สูงสุด 8 รูป');break}
+    try{
+      const clean=await resizeImg(f,1200,0.90,false);
+      const marked=await resizeImg(f,1200,0.88,true);
+      storeDraftOriginalImgs.push(clean);
+      storeDraftImgs.push(marked);
+      added++;
+    }catch(e){failed++;console.warn(e)}
   }
-
-  const selectedFiles = files.slice(0, remaining);
-  flash('กำลังเพิ่ม ' + selectedFiles.length + ' รูป...');
-
-  // ประมวลผลทุกรูปที่เลือกมาในครั้งเดียว
-  const results = await Promise.all(
-    selectedFiles.map(async (file) => {
-      try{
-        const clean = await resizeImg(file,1200,0.90,false);
-        const marked = await resizeImg(file,1200,0.88,true);
-        return {clean, marked};
-      }catch(e){
-        console.warn('อ่านรูปไม่ได้:', file && file.name, e);
-        return null;
-      }
-    })
-  );
-
-  const ok = results.filter(Boolean);
-
-  ok.forEach(item => {
-    storeDraftOriginalImgs.push(item.clean);
-    storeDraftImgs.push(item.marked);
-  });
-
-  input.value = '';
-  renderStoreThumbs();
-
-  if(ok.length){
-    flash('เพิ่มรูปพร้อมกัน ' + ok.length + ' รูปแล้ว ✓');
-  }else{
-    flash('อ่านรูปไม่ได้ — แนะนำ JPG / PNG');
-  }
+  input.value='';renderStoreThumbs();
+  if(failed) flash('อ่านรูปบางไฟล์ไม่ได้ — แนะนำ JPG / PNG'); else if(added) flash('เพิ่ม '+added+' รูปตามลำดับที่เลือก ✓');
 }
-
 function renderStoreThumbs(){
   const box=document.getElementById('storeThumbs');if(!box)return;
-  box.innerHTML=storeDraftImgs.map((src,i)=>`<div class="sp-thumb"><img src="${src}">${i===0?'<span class="sp-cover">รูปปก</span>':''}<span class="sp-index">${i+1}</span><div class="sp-tools"><button type="button" class="mini" onclick="moveStoreImg(${i},-1)" ${i===0?'disabled':''}>←</button><button type="button" class="mini" onclick="moveStoreImg(${i},1)" ${i===storeDraftImgs.length-1?'disabled':''}>→</button><button type="button" class="mini del" onclick="rmStoreImg(${i})">✕</button></div></div>`).join('');
-  const up=document.getElementById('storeUpBtn');if(up)up.style.display=storeDraftImgs.length>=10?'none':'flex';
+  box.innerHTML=storeDraftImgs.map((src,i)=>`<div class="sp-thumb"><img src="${src}">${i===0?'<span class="sp-cover">รูปปก</span>':''}<span class="sp-index">${i+1}</span><div class="sp-tools"><button class="mini" onclick="moveStoreImg(${i},-1)" ${i===0?'disabled':''}>←</button><button class="mini" onclick="moveStoreImg(${i},1)" ${i===storeDraftImgs.length-1?'disabled':''}>→</button><button class="mini del" onclick="rmStoreImg(${i})">✕</button></div></div>`).join('');
+  const up=document.getElementById('storeUpBtn');if(up)up.style.display=storeDraftImgs.length>=8?'none':'inline-block';
 }
 function moveStoreImg(i,d){const j=i+d;if(j<0||j>=storeDraftImgs.length)return;[storeDraftImgs[i],storeDraftImgs[j]]=[storeDraftImgs[j],storeDraftImgs[i]];[storeDraftOriginalImgs[i],storeDraftOriginalImgs[j]]=[storeDraftOriginalImgs[j],storeDraftOriginalImgs[i]];renderStoreThumbs()}
 function rmStoreImg(i){storeDraftImgs.splice(i,1);storeDraftOriginalImgs.splice(i,1);renderStoreThumbs()}
@@ -2480,10 +2449,10 @@ function openComposer(){
   sheet.innerHTML=`
     <h2 class="ui">${editingPostId?'แก้ไขโพสต์':'สร้างโพสต์'}</h2>
     <p class="desc">โพสต์รูป + แคปชั่น (ต้องมีรูปอย่างน้อย 1 รูป)</p>
-    <label>รูปภาพ (เลือกหลายรูปพร้อมกันได้ • สูงสุด 4 รูป)</label>
+    <label>รูปภาพ (เปิดอัลบั้ม 1 ครั้ง แล้วติ๊กเลือกหลายรูปได้ • สูงสุด 4 รูป)</label>
     <div class="imgrow" id="postThumbs"></div>
-    <button type="button" class="upbtn" id="postUpBtn" onclick="document.getElementById('postFile').click()">+ เลือกหลายรูป</button>
-    <input type="file" id="postFile" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="pickPostImg(this)">
+    <label class="upbtn post-upload-direct" id="postUpBtn" for="postFile" role="button">+ เลือกหลายรูปพร้อมกัน</label>
+    <input type="file" id="postFile" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0,0,0,0)" onchange="pickPostImg(this)">
     <label>ข้อความโพสต์ (แคปชั่น)</label>
     <textarea id="p-caption" rows="4" placeholder="เล่าเรื่องร้าน งานที่ทำ ไลฟ์สไตล์ หรือสินค้าที่อยากโชว์..."></textarea>
     <div class="row"><div><label>ราคาโดยประมาณ (ถ้ามี)</label><input id="p-price" type="number" inputmode="numeric" placeholder="เว้นว่างได้"></div>
@@ -2596,7 +2565,7 @@ routeFromUrl();
 initAdminAuth();
 initCloud();
 </script>
-<script>window.BAIMINT_BUILD='V32-native-multiple-preview-delete';</script>
+<script>window.BAIMINT_BUILD='V33-fix-post-multiselect';</script>
 </body>
 </html>
 
