@@ -2,6 +2,19 @@
 <!-- BUILD v21-edit-multiupload: direct product edit + multi-image ordered picker -->
 <html lang="th">
 <head>
+
+<script>
+(function(){
+  try{
+    var oldHosts=['baimint38.netlify.app'];
+    if(oldHosts.indexOf(location.hostname.toLowerCase())!==-1){
+      var target='https://app.baimint38.com'+location.pathname+location.search+location.hash;
+      location.replace(target);
+    }
+  }catch(e){}
+})();
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ใบมิ้นท์ | สินค้าและงานช่าง</title>
@@ -2207,10 +2220,10 @@ function renderStoreAdminTab(){
   b.innerHTML=`
     <div class="store-formbox">
       <div class="store-form-title">${p?'แก้ไขสินค้า':'เพิ่มสินค้าใหม่'}</div>
-      <label>รูปสินค้า <span style="font-weight:400;color:#667085">(เลือกหลายรูปพร้อมกันได้ • รูปแรกที่เลือก = รูปปก • สูงสุด 8 รูป)</span></label>
+      <label>รูปสินค้า <span style="font-weight:400;color:#667085">(เลือกหลายรูปพร้อมกันได้ • รูปหมายเลข 1 ที่เลือก = รูปปกอัตโนมัติ • สูงสุด 8 รูป)</span></label>
       <div style="background:#f5f9ff;border:1px solid #dce9f8;border-radius:9px;padding:8px 10px;margin:0 0 8px;color:#41617f;font-size:.69rem">ระบบจะใส่ลายน้ำ <b>mn only shop</b> สีขาวจาง ๆ ให้รูปที่แสดงบนเว็บอัตโนมัติ ส่วนรูปต้นฉบับสะอาดจะใช้เฉพาะตอนสร้างภาพโพสต์ของสินค้า <b>พร้อมขาย • มือ 1 / มือ 2</b> เท่านั้น</div>
       <div class="imgrow" id="storeThumbs"></div>
-      <button type="button" class="upbtn store-upload" id="storeUpBtn" onclick="openStoreMultiPicker()"><strong>＋</strong><span>เลือกหลายรูปครั้งเดียว</span></button>
+      <button type="button" class="upbtn store-upload" id="storeUpBtn" onclick="openStoreMultiPicker()"><strong>＋</strong><span>เลือกหลายรูปจากอัลบั้ม</span></button>
       <input type="file" id="storeFile" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="pickStoreImgs(this)">
       <div class="store-form-grid">
         <div><label>ประเภทเครื่อง *</label><select id="sp-itemType"><option value="มือ 1" ${p&&p.itemType==='มือ 1'?'selected':''}>มือ 1</option><option value="มือ 2" ${!p||p.itemType!=='มือ 1'?'selected':''}>มือ 2</option></select></div>
@@ -2283,8 +2296,8 @@ function openStoreMultiPicker(){
   input.click();
 }
 async function pickStoreImgs(input){
-  // คัดลอก FileList ทันทีหลังผู้ใช้กดยืนยันในอัลบั้ม แล้วทำตามลำดับที่ระบบส่งมา
-  // ประมวลผลทีละรูปเพื่อไม่กินแรมมือถือมากเกินไป และแสดงรูปขึ้นหน้าจอทันทีทีละลำดับ
+  // รับไฟล์ตามลำดับที่ผู้ใช้แตะเลือกในอัลบั้ม
+  // รูปหมายเลข 1 ที่เลือกในรอบนี้ จะถูกย้ายขึ้นเป็น "รูปปก" อัตโนมัติ
   const selected=Array.from(input.files||[]);
   if(!selected.length)return;
 
@@ -2293,7 +2306,8 @@ async function pickStoreImgs(input){
 
   const picked=selected.slice(0,slots);
   const skipped=Math.max(0,selected.length-picked.length);
-  let added=0,failed=0;
+  const newMarked=[],newOriginal=[];
+  let failed=0;
 
   flash('กำลังเพิ่ม '+picked.length+' รูป...');
   for(let i=0;i<picked.length;i++){
@@ -2301,10 +2315,8 @@ async function pickStoreImgs(input){
     try{
       const clean=await resizeImg(f,1200,0.90,false);
       const marked=await resizeImg(f,1200,0.88,true);
-      storeDraftOriginalImgs.push(clean);
-      storeDraftImgs.push(marked);
-      added++;
-      renderStoreThumbs();
+      newOriginal.push(clean);
+      newMarked.push(marked);
       if(picked.length>1) flash('กำลังเพิ่มรูป '+(i+1)+' / '+picked.length+'...');
     }catch(e){
       failed++;
@@ -2312,17 +2324,26 @@ async function pickStoreImgs(input){
     }
   }
 
+  // ล็อกลำดับตามที่เลือก:
+  // รูปแรกของชุดใหม่ = ปก, รูปถัดไป = 2,3,4...
+  // รูปเดิมจะต่อท้ายและยังคงอยู่ หากรวมแล้วไม่เกิน 8 รูป
+  if(newMarked.length){
+    storeDraftImgs=[...newMarked,...storeDraftImgs].slice(0,8);
+    storeDraftOriginalImgs=[...newOriginal,...storeDraftOriginalImgs].slice(0,8);
+  }
+
   input.value='';
   renderStoreThumbs();
 
   if(skipped){
-    flash('เพิ่ม '+added+' รูปแล้ว • รับได้สูงสุด 8 รูป จึงข้าม '+skipped+' รูป');
+    flash('เพิ่มรูปตามลำดับแล้ว ✓ • รูปที่ 1 = รูปปก • สูงสุด 8 รูป');
   }else if(failed){
-    flash('เพิ่ม '+added+' รูป • อ่านไม่ได้ '+failed+' รูป — แนะนำ JPG / PNG');
-  }else if(added){
-    flash('เพิ่ม '+added+' รูปตามลำดับที่เลือก ✓');
+    flash('เพิ่ม '+newMarked.length+' รูป • อ่านไม่ได้ '+failed+' รูป — แนะนำ JPG / PNG');
+  }else if(newMarked.length){
+    flash('เพิ่ม '+newMarked.length+' รูปตามลำดับ ✓ • รูปที่ 1 = รูปปก');
   }
 }
+
 function renderStoreThumbs(){
   const box=document.getElementById('storeThumbs');if(!box)return;
   box.innerHTML=storeDraftImgs.map((src,i)=>`<div class="sp-thumb"><img src="${src}">${i===0?'<span class="sp-cover">รูปปก</span>':''}<span class="sp-index">${i+1}</span><div class="sp-tools"><button class="mini" onclick="moveStoreImg(${i},-1)" ${i===0?'disabled':''}>←</button><button class="mini" onclick="moveStoreImg(${i},1)" ${i===storeDraftImgs.length-1?'disabled':''}>→</button><button class="mini del" onclick="rmStoreImg(${i})">✕</button></div></div>`).join('');
@@ -2598,7 +2619,7 @@ routeFromUrl();
 initAdminAuth();
 initCloud();
 </script>
-<script>window.BAIMINT_BUILD='V24-email-auth-restored';</script>
+<script>window.BAIMINT_BUILD='V26-multi-image-cover-order';</script>
 </body>
 </html>
 
