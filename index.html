@@ -2,19 +2,6 @@
 <!-- BUILD v21-edit-multiupload: direct product edit + multi-image ordered picker -->
 <html lang="th">
 <head>
-
-<script>
-(function(){
-  try{
-    var oldHosts=['baimint38.netlify.app'];
-    if(oldHosts.indexOf(location.hostname.toLowerCase())!==-1){
-      var target='https://app.baimint38.com'+location.pathname+location.search+location.hash;
-      location.replace(target);
-    }
-  }catch(e){}
-})();
-</script>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ใบมิ้นท์ | สินค้าและงานช่าง</title>
@@ -2296,8 +2283,6 @@ function openStoreMultiPicker(){
   input.click();
 }
 async function pickStoreImgs(input){
-  // รับไฟล์ตามลำดับที่ผู้ใช้แตะเลือกในอัลบั้ม
-  // รูปหมายเลข 1 ที่เลือกในรอบนี้ จะถูกย้ายขึ้นเป็น "รูปปก" อัตโนมัติ
   const selected=Array.from(input.files||[]);
   if(!selected.length)return;
 
@@ -2324,9 +2309,6 @@ async function pickStoreImgs(input){
     }
   }
 
-  // ล็อกลำดับตามที่เลือก:
-  // รูปแรกของชุดใหม่ = ปก, รูปถัดไป = 2,3,4...
-  // รูปเดิมจะต่อท้ายและยังคงอยู่ หากรวมแล้วไม่เกิน 8 รูป
   if(newMarked.length){
     storeDraftImgs=[...newMarked,...storeDraftImgs].slice(0,8);
     storeDraftOriginalImgs=[...newOriginal,...storeDraftOriginalImgs].slice(0,8);
@@ -2338,7 +2320,7 @@ async function pickStoreImgs(input){
   if(skipped){
     flash('เพิ่มรูปตามลำดับแล้ว ✓ • รูปที่ 1 = รูปปก • สูงสุด 8 รูป');
   }else if(failed){
-    flash('เพิ่ม '+newMarked.length+' รูป • อ่านไม่ได้ '+failed+' รูป — แนะนำ JPG / PNG');
+    flash('เพิ่ม '+newMarked.length+' รูป • อ่านไม่ได้ '+failed+' รูป');
   }else if(newMarked.length){
     flash('เพิ่ม '+newMarked.length+' รูปตามลำดับ ✓ • รูปที่ 1 = รูปปก');
   }
@@ -2619,7 +2601,7 @@ routeFromUrl();
 initAdminAuth();
 initCloud();
 </script>
-<script>window.BAIMINT_BUILD='V26-multi-image-cover-order';</script>
+<script>window.BAIMINT_BUILD='V27-email-auth-multiupload-only';</script>
 </body>
 </html>
 
