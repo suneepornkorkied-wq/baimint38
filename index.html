@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- BUILD v23-force-multiselect-picker: File System Access multi-select + Android Documents fallback -->
+<!-- BUILD v24-google-admin-login: Google owner login + V36 multi-select -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
@@ -1975,26 +1975,69 @@ function loginSheet(){
   if(!adminEmailConfigured()){
     sheet.innerHTML=`
       <h2 class="ui">🔒 ระบบแอดมินถูกล็อกไว้</h2>
-      <p class="desc">ระบบความปลอดภัยอีเมลถูกติดตั้งแล้ว แต่ยังไม่ได้กำหนดอีเมลเจ้าของร้าน จึงปิดการเข้าแอดมินไว้ก่อนเพื่อความปลอดภัย</p>
-      <div style="padding:12px;border:1px solid #f0c36d;background:#fff8e6;border-radius:12px;color:#7a5712;margin:12px 0">ส่งอีเมลเจ้าของร้านมาให้ฉัน 1 อีเมล แล้วฉันจะใส่ให้ในไฟล์และเปิดระบบยืนยันตัวตนให้ทันที</div>
+      <p class="desc">ยังไม่ได้กำหนดอีเมลเจ้าของร้าน จึงปิดการเข้าแอดมินไว้ก่อนเพื่อความปลอดภัย</p>
       <button class="btn ghost" onclick="closeSheet()">ปิด</button>`;
     overlay.classList.add('show');
     return;
   }
   sheet.innerHTML=`
-    <h2 class="ui">🔐 ยืนยันตัวตนเจ้าของร้าน</h2>
-    <p class="desc">เฉพาะอีเมลเจ้าของร้านที่ยืนยันแล้วเท่านั้นจึงจะเข้าแอดมินได้</p>
+    <h2 class="ui">🔐 เข้าสู่ระบบเจ้าของร้าน</h2>
+    <p class="desc">ใช้บัญชี Google ของเจ้าของร้านโดยตรง ไม่ต้องส่งลิงก์ยืนยันเข้าอีเมลซ้ำ</p>
     <div style="padding:12px 14px;border:1px solid #dbe7f5;background:#f7fbff;border-radius:12px;margin:12px 0">
-      <div style="font-size:.72rem;color:#667085">อีเมลเจ้าของที่อนุญาต</div>
+      <div style="font-size:.72rem;color:#667085">บัญชีที่ได้รับอนุญาต</div>
       <b style="font-size:.92rem;color:#173b61">${maskAdminEmail()}</b>
     </div>
-    <button class="btn" id="sendAdminLinkBtn" onclick="sendAdminLoginLink()">📧 ส่งลิงก์ยืนยันเข้าอีเมล</button>
-    <p class="desc" style="margin-top:10px">เปิดลิงก์จากอีเมลบน <b>เครื่อง/เบราว์เซอร์เครื่องนี้</b> เมื่อยืนยันแล้วระบบจะจำการเข้าสู่ระบบไว้เฉพาะเครื่องนี้จนกว่าจะกดออกจากระบบหรือล้างข้อมูลเบราว์เซอร์</p>
+    <button class="btn" id="googleAdminBtn" onclick="signInAdminWithGoogle()">🔵 เข้าสู่ระบบด้วย Google</button>
+    <p class="desc" style="margin-top:10px">ครั้งแรกให้เลือกบัญชี Google เจ้าของร้าน หลังจากเข้าสำเร็จ Chrome จะจำการเข้าสู่ระบบไว้จนกว่าจะกด <b>ออกจากระบบ</b> หรือล้างข้อมูลเว็บไซต์</p>
     <div class="err" id="loginErr" style="display:none"></div>
     <button class="btn ghost" onclick="closeSheet()">ยกเลิก</button>`;
   overlay.classList.add('show');
 }
 let pendingStoreEditId=null;
+
+async function signInAdminWithGoogle(){
+  if(!fauth || !adminEmailConfigured()) return loginSheet();
+  const btn=document.getElementById('googleAdminBtn');
+  const err=document.getElementById('loginErr');
+  if(btn){btn.disabled=true;btn.textContent='กำลังเปิด Google...'}
+  if(err) err.style.display='none';
+  try{
+    await fauth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    const provider=new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({prompt:'select_account',login_hint:ADMIN_EMAIL});
+    const result=await fauth.signInWithPopup(provider);
+    if(!isAllowedAdminUser(result.user)){
+      await fauth.signOut();
+      throw Object.assign(new Error('บัญชี Google นี้ไม่ได้รับอนุญาตให้เข้าแอดมิน'),{code:'admin/not-allowed'});
+    }
+    localStorage.setItem(ADMIN_DEVICE_OK_KEY,'1');
+    authUser=result.user;
+    isAdmin=true;
+    closeSheet();
+    renderAll();
+    setTimeout(()=>adminPanel('store'),0);
+  }catch(e){
+    console.warn('Google admin login failed',e);
+    if(btn){btn.disabled=false;btn.textContent='🔵 เข้าสู่ระบบด้วย Google'}
+    if(e && e.code==='auth/popup-blocked'){
+      try{
+        const provider=new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({prompt:'select_account',login_hint:ADMIN_EMAIL});
+        await fauth.signInWithRedirect(provider);
+        return;
+      }catch(e2){ e=e2; }
+    }
+    if(err){
+      let msg='เข้าสู่ระบบด้วย Google ไม่สำเร็จ';
+      if(e&&e.code==='auth/operation-not-allowed') msg='ยังไม่ได้เปิด Google Sign-in ใน Firebase Authentication — เปิดใช้งาน Google 1 ครั้งแล้วจะใช้ได้เลย';
+      else if(e&&e.code==='auth/unauthorized-domain') msg='โดเมนเว็บนี้ยังไม่ได้เพิ่มใน Firebase Authorized domains';
+      else if(e&&e.code==='auth/popup-closed-by-user') msg='ยกเลิกการเข้าสู่ระบบแล้ว กรุณากดใหม่เมื่อพร้อม';
+      else if(e&&e.code==='admin/not-allowed') msg=e.message;
+      else if(e&&e.message) msg=e.message;
+      err.textContent=msg;err.style.display='block';
+    }
+  }
+}
 async function sendAdminLoginLink(){
   if(!fauth || !adminEmailConfigured()) return loginSheet();
   const btn=document.getElementById('sendAdminLinkBtn');
@@ -2612,7 +2655,7 @@ routeFromUrl();
 initAdminAuth();
 initCloud();
 </script>
-<script>window.BAIMINT_BUILD='V36-android-documents-multiselect';</script>
+<script>window.BAIMINT_BUILD='V37-google-admin-login-plus-v36-multiselect';</script>
 </body>
 </html>
 
