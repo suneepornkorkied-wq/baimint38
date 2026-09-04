@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- BUILD v22-native-multiselect: direct native multi-image picker for mobile -->
+<!-- BUILD v23-force-multiselect-picker: File System Access multi-select + Android Documents fallback -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
@@ -2107,8 +2107,9 @@ function tab(name){
     b.innerHTML=`
       <label>รูปภาพ (เปิดอัลบั้ม 1 ครั้ง แล้วติ๊กเลือกหลายรูปได้ • สูงสุด 4 รูป)</label>
       <div class="imgrow" id="postThumbs"></div>
-      <label class="upbtn post-upload-direct multi-file-label" id="postUpBtn" role="button">+ เลือกหลายรูปพร้อมกัน<input type="file" class="postFilePicker" name="postImages[]" accept="image/*,.jpg,.jpeg,.png,.webp" multiple="multiple" onchange="pickPostImg(this)"></label>
-      <div class="multi-file-note">เลือกภาพทั้งหมดในรอบเดียว แล้วค่อยกด “ลงโพสต์”</div>
+      <button type="button" class="upbtn post-upload-direct" id="postUpBtn" onclick="openImageMultiPicker('post')">+ เลือกหลายรูปพร้อมกัน</button>
+      <input type="file" id="postFileFallback" accept="image/*,application/octet-stream" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="pickPostImg(this)">
+      <div class="multi-file-note">เลือกหลายภาพให้ครบในหน้าต่างเดียว แล้วกด “เพิ่ม / เปิด / เสร็จสิ้น” เพียงครั้งเดียว</div>
       <label>ข้อความโพสต์ (แคปชั่น)</label>
       <textarea id="p-caption" rows="4" placeholder="เล่าเรื่องร้าน งานที่ทำ ไลฟ์สไตล์ หรือสินค้าที่อยากโชว์..."></textarea>
       <div class="row"><div><label>ราคาโดยประมาณ (ถ้ามี)</label><input id="p-price" type="number" inputmode="numeric" placeholder="เว้นว่างได้"></div>
@@ -2198,6 +2199,62 @@ function tab(name){
   }
 }
 
+/* ---------- forced multi-image picker (mobile-safe) ---------- */
+function filesFromPickerSource(source){
+  if(!source) return [];
+  if(Array.isArray(source)) return source;
+  if(typeof FileList!=='undefined' && source instanceof FileList) return Array.from(source);
+  if(source.files) return Array.from(source.files||[]);
+  return [];
+}
+function looksLikeImageFile(f){
+  if(!f) return false;
+  if((f.type||'').toLowerCase().startsWith('image/')) return true;
+  return /\.(jpe?g|png|webp|gif|bmp|heic|heif)$/i.test(f.name||'');
+}
+async function openImageMultiPicker(kind){
+  const isStore=kind==='store';
+  const current=isStore?storeDraftImgs.length:postDraftImgs.length;
+  const max=isStore?8:4;
+  if(current>=max){ flash('ใส่รูปได้สูงสุด '+max+' รูป'); return; }
+
+  // วิธีหลัก: File System Access API ระบุ multiple:true โดยตรง
+  // บน Chrome/Android ที่รองรับ จะเปิดตัวเลือกไฟล์หลายรายการโดยไม่ตกกลับทันทีหลังแตะรูปแรก
+  if(window.isSecureContext && typeof window.showOpenFilePicker==='function'){
+    try{
+      const handles=await window.showOpenFilePicker({
+        id:'baimint-'+kind+'-multi-images',
+        multiple:true,
+        startIn:'pictures',
+        excludeAcceptAllOption:false,
+        types:[{
+          description:'รูปภาพ',
+          accept:{'image/*':['.jpg','.jpeg','.png','.webp','.gif','.bmp','.heic','.heif']}
+        }]
+      });
+      const files=[];
+      for(const h of handles){
+        try{ files.push(await h.getFile()); }catch(e){ console.warn('read picked file failed',e); }
+      }
+      if(!files.length) return;
+      if(isStore) await pickStoreImgs(files); else await pickPostImg(files);
+      return;
+    }catch(e){
+      if(e && e.name==='AbortError') return;
+      console.warn('showOpenFilePicker unavailable/failed, use fallback',e);
+    }
+  }
+
+  // ทางสำรอง Android: ใช้ Documents/File chooser และตั้ง multiple ไว้จริง
+  // ผสม application/octet-stream เพื่อหลีกเลี่ยง Gallery provider บางรุ่นที่บังคับเลือกได้ทีละรูป
+  const input=document.getElementById(isStore?'storeFileFallback':'postFileFallback');
+  if(!input){ flash('ไม่พบตัวเลือกรูป กรุณาปิดแล้วเปิดหน้านี้ใหม่'); return; }
+  input.value='';
+  input.multiple=true;
+  input.removeAttribute('capture');
+  input.click();
+}
+
 /* ---------- admin: showroom ---------- */
 let storeDraftImgs=[], storeDraftOriginalImgs=[], editingStoreProductId=null;
 function storeProductDraft(){ return editingStoreProductId?(db.storeProducts||[]).find(x=>Number(x.id)===Number(editingStoreProductId)):null; }
@@ -2215,8 +2272,9 @@ function renderStoreAdminTab(){
       <label>รูปสินค้า <span style="font-weight:400;color:#667085">(เลือกหลายรูปพร้อมกันได้ • รูปแรกที่เลือก = รูปปก • สูงสุด 8 รูป)</span></label>
       <div style="background:#f5f9ff;border:1px solid #dce9f8;border-radius:9px;padding:8px 10px;margin:0 0 8px;color:#41617f;font-size:.69rem">ระบบจะใส่ลายน้ำ <b>mn only shop</b> สีขาวจาง ๆ ให้รูปที่แสดงบนเว็บอัตโนมัติ ส่วนรูปต้นฉบับสะอาดจะใช้เฉพาะตอนสร้างภาพโพสต์ของสินค้า <b>พร้อมขาย • มือ 1 / มือ 2</b> เท่านั้น</div>
       <div class="imgrow" id="storeThumbs"></div>
-      <label class="upbtn store-upload multi-file-label" id="storeUpBtn" role="button"><strong>＋</strong><span>เลือกหลายรูปพร้อมกัน</span><input type="file" id="storeFile" name="storeImages[]" accept="image/*,.jpg,.jpeg,.png,.webp" multiple="multiple" onchange="pickStoreImgs(this)"></label>
-      <div class="multi-file-note">กดปุ่มครั้งเดียว แล้วเลือกหลายภาพในอัลบั้มก่อนกด “เพิ่ม/เปิด/เสร็จสิ้น” จากนั้นค่อยกด “บันทึกสินค้า”</div>
+      <button type="button" class="upbtn store-upload" id="storeUpBtn" onclick="openImageMultiPicker('store')"><strong>＋</strong><span>เลือกหลายรูปพร้อมกัน</span></button>
+      <input type="file" id="storeFileFallback" accept="image/*,application/octet-stream" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="pickStoreImgs(this)">
+      <div class="multi-file-note">กดครั้งเดียว → เลือกหลายภาพให้ครบ → กด “เพิ่ม / เปิด / เสร็จสิ้น” → แล้วค่อยบันทึกสินค้า</div>
       <div class="store-form-grid">
         <div><label>ประเภทเครื่อง *</label><select id="sp-itemType"><option value="มือ 1" ${p&&p.itemType==='มือ 1'?'selected':''}>มือ 1</option><option value="มือ 2" ${!p||p.itemType!=='มือ 1'?'selected':''}>มือ 2</option></select></div>
         <div><label>ยี่ห้อ *</label><input id="sp-brand" list="spBrandList" placeholder="เช่น Samsung" value="${p?esc(p.brand||''):''}"><datalist id="spBrandList">${brands.map(v=>`<option value="${esc(v)}">`).join('')}</datalist></div>
@@ -2278,9 +2336,11 @@ async function hideStoreProduct(id){
   if(!confirm('ซ่อนสินค้านี้จากหน้าร้าน? ข้อมูลจะยังอยู่และสามารถแก้ไขกลับเป็นพร้อมขายได้')) return;
   p.status='ซ่อน'; await save(); renderStore(); tab('store'); flash('ซ่อนสินค้าแล้ว ✓');
 }
-async function pickStoreImgs(input){
-  input.multiple=true; input.removeAttribute('capture');
-  const files=Array.from(input.files||[]); if(!files.length)return;
+async function pickStoreImgs(source){
+  const raw=filesFromPickerSource(source);
+  const files=raw.filter(looksLikeImageFile);
+  const rejected=raw.length-files.length;
+  if(!files.length){ if(rejected) flash('กรุณาเลือกไฟล์รูปภาพเท่านั้น'); return; }
   let added=0,failed=0;
   // ประมวลผลตามลำดับที่ FileList ส่งมาจากอัลบั้ม รูปแรก = ลำดับ 1 / รูปปก
   for(const f of files){
@@ -2293,8 +2353,11 @@ async function pickStoreImgs(input){
       added++;
     }catch(e){failed++;console.warn(e)}
   }
-  input.value='';renderStoreThumbs();
-  if(failed) flash('อ่านรูปบางไฟล์ไม่ได้ — แนะนำ JPG / PNG'); else if(added) flash('เพิ่ม '+added+' รูปตามลำดับที่เลือก ✓');
+  if(source && source.tagName==='INPUT') source.value='';
+  renderStoreThumbs();
+  if(rejected) flash('ข้ามไฟล์ที่ไม่ใช่รูป '+rejected+' ไฟล์');
+  else if(failed) flash('อ่านรูปบางไฟล์ไม่ได้ — แนะนำ JPG / PNG');
+  else if(added) flash('เพิ่ม '+added+' รูปพร้อมกันแล้ว ✓');
 }
 function renderStoreThumbs(){
   const box=document.getElementById('storeThumbs');if(!box)return;
@@ -2425,9 +2488,11 @@ function resizeImg(file,maxW,q,watermark){
     reader.onerror=rej; reader.readAsDataURL(file);
   });
 }
-async function pickPostImg(input){
-  input.multiple=true; input.removeAttribute('capture');
-  const files=Array.from(input.files||[]); if(!files.length) return;
+async function pickPostImg(source){
+  const raw=filesFromPickerSource(source);
+  const files=raw.filter(looksLikeImageFile);
+  const rejected=raw.length-files.length;
+  if(!files.length){ if(rejected) flash('กรุณาเลือกไฟล์รูปภาพเท่านั้น'); return; }
   let added=0, failed=0;
   for(const f of files){
     if(postDraftImgs.length>=4){ flash('ใส่ได้สูงสุด 4 รูป'); break; }
@@ -2437,9 +2502,11 @@ async function pickPostImg(input){
       added++;
     }catch(e){ console.warn('resize failed:',f.name,e); failed++; }
   }
-  input.value=''; renderPostThumbs();
-  if(failed){ flash('อ่านรูปบางไฟล์ไม่ได้ ('+failed+') — ลองใช้ไฟล์ .jpg หรือ .png (ไฟล์ .HEIC จาก iPhone ไม่รองรับ)'); }
-  else if(added){ flash('เพิ่มรูปแล้ว '+added+' รูปตามลำดับที่เลือก ✓'); }
+  if(source && source.tagName==='INPUT') source.value='';
+  renderPostThumbs();
+  if(rejected){ flash('ข้ามไฟล์ที่ไม่ใช่รูป '+rejected+' ไฟล์'); }
+  else if(failed){ flash('อ่านรูปบางไฟล์ไม่ได้ ('+failed+') — ลองใช้ไฟล์ .jpg หรือ .png (ไฟล์ .HEIC จาก iPhone ไม่รองรับ)'); }
+  else if(added){ flash('เพิ่มรูปแล้ว '+added+' รูปพร้อมกัน ✓'); }
 }
 function renderPostThumbs(){
   const box=document.getElementById('postThumbs'); if(!box) return;
@@ -2458,8 +2525,9 @@ function openComposer(){
     <p class="desc">โพสต์รูป + แคปชั่น (ต้องมีรูปอย่างน้อย 1 รูป)</p>
     <label>รูปภาพ (เปิดอัลบั้ม 1 ครั้ง แล้วติ๊กเลือกหลายรูปได้ • สูงสุด 4 รูป)</label>
     <div class="imgrow" id="postThumbs"></div>
-    <label class="upbtn post-upload-direct multi-file-label" id="postUpBtn" role="button">+ เลือกหลายรูปพร้อมกัน<input type="file" class="postFilePicker" name="postImages[]" accept="image/*,.jpg,.jpeg,.png,.webp" multiple="multiple" onchange="pickPostImg(this)"></label>
-    <div class="multi-file-note">เลือกภาพทั้งหมดในรอบเดียว แล้วค่อยกด “ลงโพสต์”</div>
+    <button type="button" class="upbtn post-upload-direct" id="postUpBtn" onclick="openImageMultiPicker('post')">+ เลือกหลายรูปพร้อมกัน</button>
+    <input type="file" id="postFileFallback" accept="image/*,application/octet-stream" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="pickPostImg(this)">
+    <div class="multi-file-note">เลือกหลายภาพให้ครบในหน้าต่างเดียว แล้วกด “เพิ่ม / เปิด / เสร็จสิ้น” เพียงครั้งเดียว</div>
     <label>ข้อความโพสต์ (แคปชั่น)</label>
     <textarea id="p-caption" rows="4" placeholder="เล่าเรื่องร้าน งานที่ทำ ไลฟ์สไตล์ หรือสินค้าที่อยากโชว์..."></textarea>
     <div class="row"><div><label>ราคาโดยประมาณ (ถ้ามี)</label><input id="p-price" type="number" inputmode="numeric" placeholder="เว้นว่างได้"></div>
@@ -2572,7 +2640,7 @@ routeFromUrl();
 initAdminAuth();
 initCloud();
 </script>
-<script>window.BAIMINT_BUILD='V34-native-mobile-multiselect';</script>
+<script>window.BAIMINT_BUILD='V35-force-multiselect-picker';</script>
 </body>
 </html>
 
