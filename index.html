@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- BUILD v24-google-admin-login: Google owner login + V36 multi-select -->
+<!-- BUILD v26-google-only-vivo-v29-android15: Google-only admin login + direct native multi-select + Files fallback -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
@@ -210,6 +210,8 @@
      This avoids programmatic .click()/duplicate-label issues on Android browsers. */
   .multi-file-label{position:relative;overflow:hidden;display:inline-flex!important;align-items:center;justify-content:center;gap:5px;user-select:none;-webkit-tap-highlight-color:transparent}
   .multi-file-label>input[type=file]{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;opacity:0!important;cursor:pointer!important;pointer-events:auto!important;padding:0!important;border:0!important;font-size:100px!important}
+  .multi-upload-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .multi-file-label.secondary{background:#fff;border-style:solid;border-color:#cbd5e1;color:#475569}
   .multi-file-note{font-size:.68rem;color:#667085;margin-top:6px;line-height:1.45}
 
   /* ---------- showroom / หน้าร้านมือถือ ---------- */
@@ -880,7 +882,6 @@ function saveLocal(){ try{localStorage.setItem(DB_KEY,JSON.stringify(db))}catch(
 // ความปลอดภัยแอดมิน: ลูกค้าอ่านหน้าเว็บได้ปกติ แต่สิทธิ์เขียน/แก้ไขต้องยืนยันอีเมลเจ้าของ
 // อีเมลเจ้าของร้านเพียงบัญชีเดียวที่ได้รับอนุญาตให้เข้าแอดมิน
 const ADMIN_EMAIL = 'suneeporn.korkied@gmail.com';
-const ADMIN_PENDING_EMAIL_KEY = 'baimint_admin_pending_email';
 const ADMIN_DEVICE_OK_KEY = 'baimint_admin_device_verified';
 let isAdmin=false, authUser=null, fauth=null, adminAuthReady=false, adminAutoOpen=false;
 function normEmail(v){return String(v||'').trim().toLowerCase()}
@@ -1988,7 +1989,7 @@ function loginSheet(){
   }
   sheet.innerHTML=`
     <h2 class="ui">🔐 เข้าสู่ระบบเจ้าของร้าน</h2>
-    <p class="desc">ใช้บัญชี Google ของเจ้าของร้านโดยตรง ไม่ต้องส่งลิงก์ยืนยันเข้าอีเมลซ้ำ</p>
+    <p class="desc">ใช้บัญชี Google ของเจ้าของร้านโดยตรง</p>
     <div style="padding:12px 14px;border:1px solid #dbe7f5;background:#f7fbff;border-radius:12px;margin:12px 0">
       <div style="font-size:.72rem;color:#667085">บัญชีที่ได้รับอนุญาต</div>
       <b style="font-size:.92rem;color:#173b61">${maskAdminEmail()}</b>
@@ -2044,64 +2045,6 @@ async function signInAdminWithGoogle(){
     }
   }
 }
-async function sendAdminLoginLink(){
-  if(!fauth || !adminEmailConfigured()) return loginSheet();
-  const btn=document.getElementById('sendAdminLinkBtn');
-  const err=document.getElementById('loginErr');
-  if(btn){btn.disabled=true;btn.textContent='กำลังส่งลิงก์...'}
-  if(err) err.style.display='none';
-  try{
-    await fauth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-    const cleanUrl=window.location.origin+window.location.pathname+'?adminEmailLogin=1';
-    await fauth.sendSignInLinkToEmail(ADMIN_EMAIL,{url:cleanUrl,handleCodeInApp:true});
-    localStorage.setItem(ADMIN_PENDING_EMAIL_KEY,ADMIN_EMAIL);
-    sheet.innerHTML=`
-      <h2 class="ui">✅ ส่งลิงก์แล้ว</h2>
-      <p class="desc">ตรวจอีเมล <b>${maskAdminEmail()}</b> แล้วกดลิงก์ยืนยันบนเครื่องนี้</p>
-      <div style="padding:12px;border:1px solid #b7dfc3;background:#f2fff6;border-radius:12px;color:#25633b;margin:12px 0">เมื่อกดลิงก์สำเร็จ เว็บจะจำสิทธิ์แอดมินไว้ในเบราว์เซอร์เครื่องนี้โดยอัตโนมัติ</div>
-      <button class="btn ghost" onclick="closeSheet()">ปิด</button>`;
-  }catch(e){
-    console.warn('send admin email link failed',e);
-    if(btn){btn.disabled=false;btn.textContent='📧 ส่งลิงก์ยืนยันเข้าอีเมล'}
-    if(err){
-      let msg='ส่งลิงก์ไม่สำเร็จ';
-      if(e&&e.code==='auth/unauthorized-continue-uri') msg='โดเมนนี้ยังไม่ได้เพิ่มใน Firebase Authorized domains';
-      else if(e&&e.code==='auth/operation-not-allowed') msg='ยังไม่ได้เปิด Email link sign-in ใน Firebase Authentication';
-      else if(e&&e.message) msg=e.message;
-      err.textContent=msg;err.style.display='block';
-    }
-  }
-}
-async function completeAdminEmailLink(){
-  if(!fauth || !firebase.auth().isSignInWithEmailLink(window.location.href)) return false;
-  const pendingEmail=localStorage.getItem(ADMIN_PENDING_EMAIL_KEY)||'';
-  // บังคับเปิดลิงก์บนเครื่องเดิมที่เป็นผู้ขอลิงก์ เพื่อไม่ย้ายสถานะการยืนยันข้ามเครื่อง
-  if(!pendingEmail || normEmail(pendingEmail)!==normEmail(ADMIN_EMAIL)){
-    overlay.classList.remove('adminmode');sheet.classList.remove('adminsheet');
-    sheet.innerHTML=`<h2 class="ui">🔒 ยืนยันไม่ได้บนเครื่องนี้</h2><p class="desc">ลิงก์นี้ต้องเปิดบนเครื่อง/เบราว์เซอร์เดียวกับที่กดขอลิงก์เข้าสู่ระบบแอดมิน</p><button class="btn" onclick="loginSheet()">ขอลิงก์ใหม่บนเครื่องนี้</button>`;
-    overlay.classList.add('show');
-    return true;
-  }
-  try{
-    adminAutoOpen=true;
-    await fauth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-    const result=await fauth.signInWithEmailLink(pendingEmail,window.location.href);
-    localStorage.removeItem(ADMIN_PENDING_EMAIL_KEY);
-    if(!isAllowedAdminUser(result.user)){
-      await fauth.signOut();
-      throw new Error('อีเมลนี้ไม่ได้รับอนุญาตให้เข้าแอดมิน');
-    }
-    localStorage.setItem(ADMIN_DEVICE_OK_KEY,'1');
-    history.replaceState({},document.title,window.location.origin+window.location.pathname);
-    return true;
-  }catch(e){
-    console.warn('complete admin email link failed',e);
-    overlay.classList.remove('adminmode');sheet.classList.remove('adminsheet');
-    sheet.innerHTML=`<h2 class="ui">ยืนยันตัวตนไม่สำเร็จ</h2><p class="desc">${esc(e&&e.message?e.message:'กรุณาขอลิงก์ใหม่')}</p><button class="btn" onclick="loginSheet()">ขอลิงก์ใหม่</button>`;
-    overlay.classList.add('show');
-    return true;
-  }
-}
 async function initAdminAuth(){
   if(!fauth){adminAuthReady=true;return}
   try{await fauth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)}catch(e){console.warn('auth persistence failed',e)}
@@ -2124,7 +2067,6 @@ async function initAdminAuth(){
       setTimeout(()=>pendingId!==null?editStoreProduct(pendingId):adminPanel('store'),0);
     }
   });
-  await completeAdminEmailLink();
 }
 function adminPanel(startTab='store'){
   overlay.classList.add('adminmode');sheet.classList.add('adminsheet');
@@ -2142,7 +2084,7 @@ function adminPanel(startTab='store'){
 }
 async function logoutAdmin(){
   try{if(fauth) await fauth.signOut()}catch(e){console.warn(e)}
-  isAdmin=false;authUser=null;localStorage.removeItem(ADMIN_DEVICE_OK_KEY);localStorage.removeItem(ADMIN_PENDING_EMAIL_KEY);
+  isAdmin=false;authUser=null;localStorage.removeItem(ADMIN_DEVICE_OK_KEY);
   closeSheet();renderAll();flash('ออกจากระบบแล้ว ✓');
 }
 function tab(name){
@@ -2156,9 +2098,17 @@ function tab(name){
     b.innerHTML=`
       <label>รูปภาพ (เปิดอัลบั้ม 1 ครั้ง แล้วติ๊กเลือกหลายรูปได้ • สูงสุด 8 รูป)</label>
       <div class="imgrow" id="postThumbs"></div>
-      <label class="upbtn post-upload-direct" id="postUpBtn" for="postFileFallback" role="button" onclick="event.preventDefault();openImageMultiPicker('post')">+ เลือกหลายรูปพร้อมกัน</label>
-      <input type="file" id="postFileFallback" accept="*/*" multiple style="position:fixed;left:-10000px;top:-10000px;width:1px;height:1px;opacity:0" onchange="pickPostImg(this)">
-      <div class="multi-file-note">ระบบจะเปิด Files/เอกสาร เพื่อให้เลือกหลายรูปในครั้งเดียว → เข้า “รูปภาพ / Images” → เลือกหลายรูป → กด “เปิด / เสร็จสิ้น” ครั้งเดียว</div>
+      <div class="multi-upload-actions" id="postUploadActions">
+        <label class="upbtn post-upload-direct multi-file-label" id="postUpBtn" role="button">
+          + เลือกหลายรูปจากอัลบั้ม
+          <input type="file" id="postFile" accept="image/*" multiple onchange="pickPostImg(this)">
+        </label>
+        <label class="upbtn multi-file-label secondary" role="button">
+          เลือกผ่าน Files
+          <input type="file" id="postFileFallback" accept="*/*" multiple onchange="pickPostImg(this)">
+        </label>
+      </div>
+      <div class="multi-file-note">สำหรับ vivo V29 / Android 15: ใช้ปุ่ม “เลือกหลายรูปจากอัลบั้ม” ก่อน หากอัลบั้มยังเด้งกลับหลังแตะรูปแรก ให้ใช้ “เลือกผ่าน Files” แล้วเลือกหลายไฟล์ก่อนกด เปิด/เสร็จสิ้น</div>
       <label>ข้อความโพสต์ (แคปชั่น)</label>
       <textarea id="p-caption" rows="4" placeholder="เล่าเรื่องร้าน งานที่ทำ ไลฟ์สไตล์ หรือสินค้าที่อยากโชว์..."></textarea>
       <div class="row"><div><label>ราคาโดยประมาณ (ถ้ามี)</label><input id="p-price" type="number" inputmode="numeric" placeholder="เว้นว่างได้"></div>
@@ -2248,7 +2198,7 @@ function tab(name){
   }
 }
 
-/* ---------- Android multi-image picker V36 ---------- */
+/* ---------- Android multi-image picker V37 / vivo V29 Android 15 ---------- */
 function filesFromPickerSource(source){
   if(!source) return [];
   if(Array.isArray(source)) return source;
@@ -2293,9 +2243,15 @@ function renderStoreAdminTab(){
       <label>รูปสินค้า <span style="font-weight:400;color:#667085">(เลือกหลายรูปพร้อมกันได้ • รูปแรกที่เลือก = รูปปก • สูงสุด 8 รูป)</span></label>
       <div style="background:#f5f9ff;border:1px solid #dce9f8;border-radius:9px;padding:8px 10px;margin:0 0 8px;color:#41617f;font-size:.69rem">ระบบจะใส่ลายน้ำ <b>mn only shop</b> สีขาวจาง ๆ ให้รูปที่แสดงบนเว็บอัตโนมัติ ส่วนรูปต้นฉบับสะอาดจะใช้เฉพาะตอนสร้างภาพโพสต์ของสินค้า <b>พร้อมขาย • มือ 1 / มือ 2</b> เท่านั้น</div>
       <div class="imgrow" id="storeThumbs"></div>
-      <label class="upbtn store-upload" id="storeUpBtn" for="storeFileFallback" role="button" onclick="event.preventDefault();openImageMultiPicker('store')"><strong>＋</strong><span>เลือกหลายรูปพร้อมกัน</span></label>
-      <input type="file" id="storeFileFallback" accept="*/*" multiple style="position:fixed;left:-10000px;top:-10000px;width:1px;height:1px;opacity:0" onchange="pickStoreImgs(this)">
-      <div class="multi-file-note">กดครั้งเดียว → ระบบเปิด Files/เอกสาร → เข้า “รูปภาพ / Images” → เลือกหลายรูป → กด “เปิด / เสร็จสิ้น” ครั้งเดียว → แล้วค่อยบันทึกสินค้า</div>
+      <div class="multi-upload-actions" id="storeUploadActions">
+        <label class="upbtn store-upload multi-file-label" id="storeUpBtn" role="button"><strong>＋</strong><span>เลือกหลายรูปจากอัลบั้ม</span>
+          <input type="file" id="storeFile" accept="image/*" multiple onchange="pickStoreImgs(this)">
+        </label>
+        <label class="upbtn multi-file-label secondary" role="button"><span>เลือกผ่าน Files</span>
+          <input type="file" id="storeFileFallback" accept="*/*" multiple onchange="pickStoreImgs(this)">
+        </label>
+      </div>
+      <div class="multi-file-note">สำหรับ vivo V29 / Android 15: กด “เลือกหลายรูปจากอัลบั้ม” แล้วติ๊กหลายรูปก่อนยืนยัน หากอัลบั้มยังเด้งกลับหลังรูปแรก ให้ใช้ “เลือกผ่าน Files” เป็นทางสำรอง</div>
       <div class="store-form-grid">
         <div><label>ประเภทเครื่อง *</label><select id="sp-itemType"><option value="มือ 1" ${p&&p.itemType==='มือ 1'?'selected':''}>มือ 1</option><option value="มือ 2" ${!p||p.itemType!=='มือ 1'?'selected':''}>มือ 2</option></select></div>
         <div><label>ยี่ห้อ *</label><input id="sp-brand" list="spBrandList" placeholder="เช่น Samsung" value="${p?esc(p.brand||''):''}"><datalist id="spBrandList">${brands.map(v=>`<option value="${esc(v)}">`).join('')}</datalist></div>
@@ -2383,7 +2339,7 @@ async function pickStoreImgs(source){
 function renderStoreThumbs(){
   const box=document.getElementById('storeThumbs');if(!box)return;
   box.innerHTML=storeDraftImgs.map((src,i)=>`<div class="sp-thumb"><img src="${src}">${i===0?'<span class="sp-cover">รูปปก</span>':''}<span class="sp-index">${i+1}</span><div class="sp-tools"><button class="mini" onclick="moveStoreImg(${i},-1)" ${i===0?'disabled':''}>←</button><button class="mini" onclick="moveStoreImg(${i},1)" ${i===storeDraftImgs.length-1?'disabled':''}>→</button><button class="mini del" onclick="rmStoreImg(${i})">✕</button></div></div>`).join('');
-  const up=document.getElementById('storeUpBtn');if(up)up.style.display=storeDraftImgs.length>=8?'none':'inline-block';
+  const actions=document.getElementById('storeUploadActions');if(actions)actions.style.display=storeDraftImgs.length>=8?'none':'flex';
 }
 function moveStoreImg(i,d){const j=i+d;if(j<0||j>=storeDraftImgs.length)return;[storeDraftImgs[i],storeDraftImgs[j]]=[storeDraftImgs[j],storeDraftImgs[i]];[storeDraftOriginalImgs[i],storeDraftOriginalImgs[j]]=[storeDraftOriginalImgs[j],storeDraftOriginalImgs[i]];renderStoreThumbs()}
 function rmStoreImg(i){storeDraftImgs.splice(i,1);storeDraftOriginalImgs.splice(i,1);renderStoreThumbs()}
@@ -2536,8 +2492,8 @@ function renderPostThumbs(){
        <img class="thumb" src="${src}">
        <button class="mini del" style="position:absolute;top:-6px;right:-6px;padding:2px 7px;border-radius:50%;background:#fff" onclick="rmPostImg(${i})">✕</button>
      </div>`).join('');
-  const up=document.getElementById('postUpBtn');
-  if(up) up.style.display = postDraftImgs.length>=8 ? 'none':'inline-block';
+  const actions=document.getElementById('postUploadActions');
+  if(actions) actions.style.display = postDraftImgs.length>=8 ? 'none':'flex';
 }
 function rmPostImg(i){ postDraftImgs.splice(i,1); postDraftOriginalImgs.splice(i,1); renderPostThumbs(); }
 function openComposer(){
@@ -2546,9 +2502,17 @@ function openComposer(){
     <p class="desc">โพสต์รูป + แคปชั่น (ต้องมีรูปอย่างน้อย 1 รูป)</p>
     <label>รูปภาพ (เปิดอัลบั้ม 1 ครั้ง แล้วติ๊กเลือกหลายรูปได้ • สูงสุด 8 รูป)</label>
     <div class="imgrow" id="postThumbs"></div>
-    <label class="upbtn post-upload-direct" id="postUpBtn" for="postFileFallback" role="button" onclick="event.preventDefault();openImageMultiPicker('post')">+ เลือกหลายรูปพร้อมกัน</label>
-    <input type="file" id="postFileFallback" accept="*/*" multiple style="position:fixed;left:-10000px;top:-10000px;width:1px;height:1px;opacity:0" onchange="pickPostImg(this)">
-    <div class="multi-file-note">ระบบจะเปิด Files/เอกสาร เพื่อให้เลือกหลายรูปในครั้งเดียว → เข้า “รูปภาพ / Images” → เลือกหลายรูป → กด “เปิด / เสร็จสิ้น” ครั้งเดียว</div>
+    <div class="multi-upload-actions" id="postUploadActions">
+      <label class="upbtn post-upload-direct multi-file-label" id="postUpBtn" role="button">
+        + เลือกหลายรูปจากอัลบั้ม
+        <input type="file" id="postFile" accept="image/*" multiple onchange="pickPostImg(this)">
+      </label>
+      <label class="upbtn multi-file-label secondary" role="button">
+        เลือกผ่าน Files
+        <input type="file" id="postFileFallback" accept="*/*" multiple onchange="pickPostImg(this)">
+      </label>
+    </div>
+    <div class="multi-file-note">สำหรับ vivo V29 / Android 15: ใช้ปุ่ม “เลือกหลายรูปจากอัลบั้ม” ก่อน หากอัลบั้มยังเด้งกลับหลังแตะรูปแรก ให้ใช้ “เลือกผ่าน Files” แล้วเลือกหลายไฟล์ก่อนกด เปิด/เสร็จสิ้น</div>
     <label>ข้อความโพสต์ (แคปชั่น)</label>
     <textarea id="p-caption" rows="4" placeholder="เล่าเรื่องร้าน งานที่ทำ ไลฟ์สไตล์ หรือสินค้าที่อยากโชว์..."></textarea>
     <div class="row"><div><label>ราคาโดยประมาณ (ถ้ามี)</label><input id="p-price" type="number" inputmode="numeric" placeholder="เว้นว่างได้"></div>
